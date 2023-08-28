@@ -499,8 +499,8 @@
 	status = "okay";
 	pinctrl-names = "default", "sleep";
 
-	pinctrl-0 = <&cdc_pdm_lines_act>;
-	pinctrl-1 = <&cdc_pdm_lines_sus>;
+	pinctrl-0 = <&cdc_pdm_default>;
+	pinctrl-1 = <&cdc_pdm_sleep>;
 	model = "wt88047";
 	widgets =
 		"Speaker", "Speaker",
