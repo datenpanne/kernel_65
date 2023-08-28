@@ -201,7 +201,7 @@ static int hw_nt51021_prepare(struct drm_panel *panel)
 		dev_err(dev, "failed to send DCS nop: %d\n", ret);
 		return ret;
 	}
-	usleep_range(10, 20);
+	usleep_range(100, 200);
 
 	ctx->prepared = true;
 	return 0;

@@ -23,7 +23,7 @@
 	};
 
 	chosen {
-		stdout-path = "serial0";
+		stdout-path = "serial0:115200n8";
 	};
 
 	reserved-memory {
@@ -175,6 +175,17 @@
 		pinctrl-0 = <&lcd_1v8_default>;*/
 	};
 
+	reg_tp_vdd: regulator-tp-vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "tp_vdd";
+
+		gpio = <&tlmm 112 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		//startup-delay-us = <200000>; //delay 200
+		pinctrl-names = "default";
+		pinctrl-0 = <&tp_vdd_default>;
+	};
+
 	reg_lcd_vsp: regulator-lcd-vsp {
 		compatible = "regulator-fixed";
 		regulator-name = "lcd_vsp";
@@ -207,31 +218,35 @@
 		pinctrl-0 = <&lcd_vsn_default>;*/
 	};
 
-	reg_speaker: regulator-speaker {
+	reg_sp_boost: regulator-sp-boost {
 		compatible = "regulator-fixed";
-		regulator-name = "spk_vdd";
+		regulator-name = "sp_boost";
 
-		gpio = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+		gpio = <&tlmm 2 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		pinctrl-names = "default";
-		pinctrl-0 = <&spk_vdd_default>;
+		pinctrl-0 = <&sp_boost_default>;
 	};
 
-	/*headphones_switch: audio-switch {
+	headphones_switch: audio-switch {
 		compatible = "simple-audio-amplifier";
-		enable-gpios = <&msmgpio 0 GPIO_ACTIVE_HIGH>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&headphones_switch_default>;
+
+		enable-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
 		sound-name-prefix = "Headphones Switch";
-	};*/
+	};
 
 	speaker_amp: audio-amplifier {
 		compatible = "simple-audio-amplifier";
+		VCC-supply = <&reg_sp_boost>;
+		gpios = <&tlmm 1 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&speaker_amp_default>;
-		VCC-supply = <&reg_speaker>;
+
 		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
 		startup-delay-us = <100000>; //delay 100
 		sound-name-prefix = "Speaker Amp";
@@ -245,7 +260,8 @@
 	};
 };
 
-&blsp_spi1 { // for speaker
+/*speaker*/
+&blsp_spi1 {
 	mosi-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
 	miso-gpios = <&tlmm 1 GPIO_ACTIVE_HIGH>;
 	cs-gpios = <&tlmm 2 GPIO_ACTIVE_HIGH>;
@@ -285,7 +301,7 @@
 		 * NOTE: vdd is not directly supplied by pm8916_l16, it seems to be a
 		 * fixed regulator that is automatically enabled by pm8916_l16.
 		 */
-		vdd-supply = <&pm8916_l16>;
+		vdd-supply = <&reg_tp_vdd>;
 		vddio-supply = <&pm8916_l16>;
 
 		pinctrl-0 = <&touchscreen_default>;
@@ -481,44 +497,28 @@
 
 &sound {
 	status = "okay";
+	pinctrl-names = "default", "sleep";
 
+	pinctrl-0 = <&cdc_pdm_lines_act>;
+	pinctrl-1 = <&cdc_pdm_lines_sus>;
 	model = "wt88047";
 	widgets =
-		"Speaker", "Speaker";
-		//"Headphone", "Headphones";
-	pin-switches = "Speaker";
+		"Speaker", "Speaker",
+		"Headphone", "Headphones";
+	pin-switches = "Speaker", "Headphones";
 	audio-routing =
 		"Speaker", "Speaker Amp OUTL",
 		"Speaker", "Speaker Amp OUTR",
 		"Speaker Amp INL", "HPH_L",
 		"Speaker Amp INR", "HPH_R",
-		/*"Headphones", "Headphones Switch OUTL",
+		"Headphones", "Headphones Switch OUTL",
 		"Headphones", "Headphones Switch OUTR",
-		"Headphones Switch INL", "HPH_L",
-		"Headphones Switch INR", "HPH_R",*/
-		"AMIC1", "MIC BIAS External1",
-		"AMIC2", "MIC BIAS External2",
-		"AMIC3", "MIC BIAS External1";
-	aux-devs = <&speaker_amp>;
-};
-
-/*&sound {
-	model = "oppo-a51f";
-	audio-routing =
-		//"Speaker Amp L IN", "HPH_L_EXT",
-		//"Speaker Amp R IN", "HPH_R_EXT",
 		"Headphones Switch INL", "HPH_L",
 		"Headphones Switch INR", "HPH_R",
 		"AMIC1", "MIC BIAS External1",
 		"AMIC2", "MIC BIAS External2",
 		"AMIC3", "MIC BIAS External1";
-	aux-devs = <&headphones_switch>, <&speaker_amp_left>;//, <&speaker_amp_right>, 
-
-	pinctrl-0 = <&cdc_pdm_default>;
-	pinctrl-1 = <&cdc_pdm_sleep>;
-	pinctrl-names = "default", "sleep";
-
-	status = "okay";
+	aux-devs = <&speaker_amp>, <&headphones_switch>;
 
 	dai-link-primary {
 		link-name = "Primary MI2S";
@@ -539,7 +539,7 @@
 			sound-dai = <&lpass_codec 1>, <&pm8916_codec 1>;
 		};
 	};
-};*/
+};
 
 &usb {
 	extcon = <&usb_id>, <&usb_id>;
@@ -646,8 +646,8 @@
 		bias-disable;
 	};
 
-	spk_vdd_default: spk-vdd-default-state {
-		pins = "gpio0";
+	sp_boost_default: sp-boost-default-state {
+		pins = "gpio2";
 		function = "gpio";
 
 		drive-strength = <2>;
@@ -655,11 +655,18 @@
 	};
 
 	speaker_amp_default: speaker-amp-default-state {
-		pins = "gpio3";
+		pins = "gpio1","gpio3";
 		function = "gpio";
 
 		drive-strength = <2>;
 		bias-disable;
+	};
+
+	tp_vdd_default: reg-tp-vdd-default-state {
+		pins = "gpio112";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
 	};
 
 	touchscreen_default: touchscreen-default-state {
