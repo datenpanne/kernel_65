@@ -228,6 +228,18 @@
 		pinctrl-0 = <&sp_boost_default>;
 	};
 
+	reg_sp_swich: regulator-sp-swich {
+		compatible = "regulator-fixed";
+		regulator-name = "sp_swich";
+		vin-supply = <&reg_sp_boost>;
+
+		gpio = <&tlmm 1 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		//startup-delay-us = <200000>; //delay 200
+		pinctrl-names = "default";
+		pinctrl-0 = <&sp_swich_default>;
+	};
+
 	headphones_switch: audio-switch {
 		compatible = "simple-audio-amplifier";
 
@@ -240,15 +252,13 @@
 
 	speaker_amp: audio-amplifier {
 		compatible = "simple-audio-amplifier";
-		VCC-supply = <&reg_sp_boost>;
-		gpios = <&tlmm 1 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
+		VCC-supply = <&reg_sp_swich>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&speaker_amp_default>;
 
-		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
-		startup-delay-us = <100000>; //delay 100
+		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>; //enable
+		startup-delay-us = <100000>; //delay 100ms
 		sound-name-prefix = "Speaker Amp";
 	};
 
@@ -658,6 +668,13 @@
 		pins = "gpio1","gpio3";
 		function = "gpio";
 
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	sp_swich_default: sp-swich-default-state {
+		pins = "gpio1";
+		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
 	};
