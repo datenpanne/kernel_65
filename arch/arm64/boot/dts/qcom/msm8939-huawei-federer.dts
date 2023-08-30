@@ -518,7 +518,7 @@
 
 	pinctrl-0 = <&cdc_pdm_default>;
 	pinctrl-1 = <&cdc_pdm_sleep>;
-	model = "wt88047";
+	model = "federer";
 	widgets =
 		"Speaker", "Speaker",
 		"Headphone", "Headphones";
@@ -672,7 +672,7 @@
 	};
 
 	speaker_amp_default: speaker-amp-default-state {
-		pins = "gpio1","gpio3";
+		pins = "gpio3";
 		function = "gpio";
 
 		drive-strength = <2>;

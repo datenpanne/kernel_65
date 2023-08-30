@@ -123,7 +123,7 @@ static int hw_nt51021_on(struct hw_nt51021 *ctx)
 	struct device *dev = &dsi->dev;
 	int ret;
 
-	mutex_lock(&ctx->mutex);
+	//mutex_lock(&ctx->mutex);
 	ret = hw_nt51021_pwr(ctx);
 	if (ret)
 		return ret;
@@ -131,7 +131,7 @@ static int hw_nt51021_on(struct hw_nt51021 *ctx)
 	hw_nt51021_init(ctx);
 	if (ret)
 		return ret;
-	mutex_unlock(&ctx->mutex);
+	//mutex_unlock(&ctx->mutex);
 
 	return 0;
 }
