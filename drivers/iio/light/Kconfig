@@ -101,6 +101,13 @@ config AS73211
 	 This driver can also be built as a module.  If so, the module
 	 will be called as73211.
 
+config BH1745
+	tristate "ROHM BH1745 ambient light sensor"
+	depends on I2C
+	help
+	  Say Y here to build support for the ROHM BH1745.
+	  Driver by Andi and Coco! Vive l'empereur.
+
 config BH1750
 	tristate "ROHM BH1750 ambient light sensor"
 	depends on I2C
