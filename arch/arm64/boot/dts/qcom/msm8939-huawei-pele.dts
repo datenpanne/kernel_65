@@ -157,7 +157,7 @@
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
 		regulator-always-on;
-		regulator-boot-on; 
+		regulator-boot-on;
 
 		/*gpio = <&tlmm 10 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
@@ -175,7 +175,7 @@
 		regulator-boot-on; // allows fb console to show up briefly at boot without always-on
 		//enable-active-high;
 
-		gpio = <&msmgpio 97 GPIO_ACTIVE_HIGH>;
+		gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		startup-delay-us = <200000>; //delay 200
 		pinctrl-names = "default";
@@ -191,14 +191,14 @@
 		regulator-boot-on; // allows fb console to show up briefly at boot without always-on
 		//enable-active-high;
 
-		gpio = <&msmgpio 32 GPIO_ACTIVE_HIGH>;
+		gpio = <&tlmm 32 GPIO_ACTIVE_HIGH>;
 		//startup-delay-us = <200000>; //delay 200
 		enable-active-high;
 		pinctrl-names = "default";
 		pinctrl-0 = <&lcd_vsn_default>;
 	};
 
-   /* lcd_pp3300: regulator-pp3300 {
+	/*lcd_pp3300: regulator-pp3300 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_3v3";
 		vin-supply = <&pm8916_l16>;
@@ -296,10 +296,6 @@
 
 		reset-gpios = <&tlmm 12 GPIO_ACTIVE_LOW>;
 
-		/*
-		 * NOTE: vdd is not directly supplied by pm8916_l16, it seems to be a
-		 * fixed regulator that is automatically enabled by pm8916_l16.
-		 */
 		vdd-supply = <&reg_tp_vdd>;
 		vddio-supply = <&reg_tp_vddio>;
 
@@ -630,10 +626,12 @@
 		bias-pull-down;
 	};
 
-	/*pinctrl_backlight: backlight-state {
-		pins = "gpio3";
+	sdc2_cd_default: sdc2-cd-default-state {
+		pins = "gpio38";
 		function = "gpio";
-	};*/
+		drive-strength = <2>;
+		bias-disable;
+	};
 
 	prox_irq_default: prox-irq-default-state {
 		pins = "gpio113";
