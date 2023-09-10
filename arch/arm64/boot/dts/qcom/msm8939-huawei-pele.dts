@@ -64,27 +64,28 @@
 		};
 	};
 
-	/*battery: battery {
+	battery: battery {
 		compatible = "simple-battery";
 		device-chemistry = "lithium-ion-polymer";
-		voltage-min-design-microvolt = <3400000>;
-		voltage-max-design-microvolt = <4400000>;
-		energy-full-design-microwatt-hours = <24700000>;
-		charge-full-design-microamp-hours = <6500000>;
+		voltage-min-design-microvolt = <3300000>;
+		voltage-max-design-microvolt = <4350000>;
+		energy-full-design-microwatt-hours = <16074000>;
+		charge-full-design-microamp-hours = <4230000>;
 
-		precharge-current-microamp = <1300000>;
-		charge-term-current-microamp = <260000>;
+		//precharge-current-microamp = <1300000>;
+		//charge-term-current-microamp = <150000>;
 
 		ocv-capacity-celsius = <25>;
-		ocv-capacity-table-0 = <4365000 100>, <4314000 95>, <4253000 90>,
-			<4194000 85>, <4137000 80>, <4084000 75>, <4032000 70>,
-			<3983000 65>, <3936000 60>, <3888000 55>, <3852000 50>,
-			<3826000 45>, <3806000 40>, <3789000 35>, <3779000 30>,
-			<3769000 25>, <3740000 20>, <3712000 16>, <3702000 13>,
-			<3692000 11>, <3690000 10>, <3688000 9>, <3687000 8>,
-			<3685000 7>, <3680000 6>, <3663000 5>, <3618000 4>,
-			<3558000 3>, <3478000 2>, <3352000 1>, <3000000 0>;
-	};*/
+		ocv-capacity-table-0 = <4330000 100>, <4265000 95>,
+			<4208000 90>, <4153000 85>, <4100000 80>, <4049000 75>,
+			<4001000 70>, <3962000 65>, <3919000 60>, <3872000 55>,
+			<3839000 50>, <3817000 45>, <3798000 40>, <3783000 35>,
+			<3767000 30>, <3747000 25>, <3729000 20>, <3709000 16>,
+			<3688000 13>, <3681000 11>, <3680000 10>, <3679000 9>,
+			<3677000 8>, <3674000 7>, <3666000 6>, <3641000 5>,
+			<3597000 4>, <3537000 3>, <3457000 2>, <3336000 1>,
+			<3000000 0>;
+	};
 
 	gpio-hall-sensor {
 		compatible = "gpio-keys";
@@ -256,6 +257,24 @@
 &blsp_i2c2 {
 	status = "okay";
 
+	accelerometer@18 {
+		compatible = "bosch,bma255";
+		reg = <0x18>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <115 IRQ_TYPE_EDGE_RISING>;
+
+		vdd-supply = <&pm8916_l17>;
+		vddio-supply = <&pm8916_l6>;
+
+		mount-matrix = "1",  "0", "0",
+			       "0", "-1", "0",
+			       "0",  "0", "1";
+
+		pinctrl-0 = <&accel_int_default>;
+		pinctrl-names = "default";
+	};
+
 	magnetometer@c {
 		compatible = "asahi-kasei,ak09911";
 		reg = <0x0c>;
@@ -369,14 +388,13 @@
 &pm8916_bms {
 	status = "okay";
 
-	//monitored-battery = <&battery>;
+	monitored-battery = <&battery>;
 };
 
 &pm8916_codec {
 	qcom,micbias-lvl = <2800>;
 	qcom,mbhc-vthreshold-low = <75 150 237 450 500>;
 	qcom,mbhc-vthreshold-high = <75 150 237 450 500>;
-	qcom,micbias1-ext-cap;
 	qcom,hphl-jack-type-normally-open;
 	status = "okay";
 };
@@ -493,33 +511,11 @@
 
 &sound {
 	status = "okay";
-	pinctrl-names = "default", "sleep";
 
-	model = "msm8916";
 	audio-routing =
-		"AMIC1", "MIC BIAS External1",
+		"AMIC1", "MIC BIAS Internal1",
 		"AMIC2", "MIC BIAS Internal2",
-		"AMIC3", "MIC BIAS External1";
-
-	dai-link-primary {
-		link-name = "Primary MI2S";
-		cpu {
-			sound-dai = <&lpass MI2S_PRIMARY>;
-		};
-		codec {
-			sound-dai = <&lpass_codec 0>, <&pm8916_codec 0>;
-		};
-	};
-
-	dai-link-tertiary {
-		link-name = "Tertiary MI2S";
-		cpu {
-			sound-dai = <&lpass MI2S_TERTIARY>;
-		};
-		codec {
-			sound-dai = <&lpass_codec 1>, <&pm8916_codec 1>;
-		};
-	};
+		"AMIC3", "MIC BIAS Internal3";
 };
 
 &usb {
@@ -539,7 +535,7 @@
 };
 
 &wcnss_iris {
-	compatible = "qcom,wcn3660b";
+	compatible = "qcom,wcn3620";
 };
 
 &wcnss_mem {
