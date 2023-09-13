@@ -3,6 +3,8 @@
 /dts-v1/;
 
 #include "msm8939-pm8916.dtsi"
+#include "msm8916-modem.dtsi"
+
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
@@ -267,9 +269,9 @@
 		vdd-supply = <&pm8916_l17>;
 		vddio-supply = <&pm8916_l6>;
 
-		mount-matrix = "1",  "0", "0",
+		mount-matrix = "-1", "0", "0",
 			       "0", "-1", "0",
-			       "0",  "0", "1";
+			       "0", "0", "1";
 
 		pinctrl-0 = <&accel_int_default>;
 		pinctrl-names = "default";
@@ -285,21 +287,9 @@
 		pinctrl-names = "default";
 	};
 
-	proximity@39 {
-		compatible = "avago,apds9930";
-		reg = <0x39>;
-
-		interrupt-parent = <&tlmm>;
-		interrupts = <113 IRQ_TYPE_EDGE_FALLING>;
-
-		vdd-supply = <&pm8916_l17>;
-		vddio-supply = <&pm8916_l6>;
-
-		led-max-microamp = <25000>;
-		amstaos,proximity-diodes = <0>;
-
-		pinctrl-0 = <&prox_irq_default>;
-		pinctrl-names = "default";
+	/*proximity@1e {
+		compatible = "ap3426";
+		reg = <0x1e>;*/
 	};
 };
 
@@ -516,6 +506,10 @@
 		"AMIC1", "MIC BIAS Internal1",
 		"AMIC2", "MIC BIAS Internal2",
 		"AMIC3", "MIC BIAS Internal3";
+
+	pinctrl-0 = <&cdc_pdm_default>;
+	pinctrl-1 = <&cdc_pdm_sleep>;
+	pinctrl-names = "default", "sleep";
 };
 
 &usb {
