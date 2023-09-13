@@ -520,7 +520,7 @@
 			sound-dai = <&lpass MI2S_PRIMARY>;
 		};
 		codec {
-			sound-dai = <&lpass_codec 0>, <&wcd_codec 0>;
+			sound-dai = <&lpass_codec 0>, <&pm8916_codec 0>;
 		};
 	};
 
@@ -530,7 +530,7 @@
 			sound-dai = <&lpass MI2S_TERTIARY>;
 		};
 		codec {
-			sound-dai = <&lpass_codec 1>, <&wcd_codec 1>;
+			sound-dai = <&lpass_codec 1>, <&pm8916_codec 1>;
 		};
 	};
 };
