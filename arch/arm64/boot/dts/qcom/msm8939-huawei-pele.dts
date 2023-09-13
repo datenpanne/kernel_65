@@ -289,8 +289,8 @@
 
 	/*proximity@1e {
 		compatible = "ap3426";
-		reg = <0x1e>;*/
-	};
+		reg = <0x1e>;
+	};*/
 };
 
 &blsp_i2c5 {
