@@ -302,6 +302,19 @@
 	};
 };
 
+&blsp_i2c4 {
+	status = "okay";
+	charger: bq24192@6b {
+		compatible = "ti,bq24296";
+		reg = <0x6b>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <62 IRQ_TYPE_EDGE_FALLING>;
+		//interrupts-extended = <&tlmm 62 IRQ_TYPE_EDGE_FALLING>;
+		omit-battery-class;
+		usb_otg_vbus: usb-otg-vbus { };
+	};
+};
+
 &blsp_i2c5 {
 	status = "okay";
 
@@ -421,20 +434,6 @@
 			qcom,amux-route = <3>; //PMIC_MPP_AMUX_ROUTE_CH8
 		};
 	};
-
-	/*mpp@a100 { //reference
-		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
-		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
-		qcom,ain-route = <1>; // QPNP_PIN_AIN_AMUX_CH6
-		qcom,master-en = <1>; // Enable features
-	};
-
-	mpp@a300 {
-		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
-		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
-		qcom,ain-route = <3>; // QPNP_PIN_AIN_AMUX_CH8
-		qcom,master-en = <1>; // Enable features
-	};*/
 };
 
 &pm8916_resin {
@@ -466,31 +465,65 @@
 };
 
 &pm8916_vadc {
+	adc-chan@2 {
+		reg = <VADC_VCHG_SNS>;
+		qcom,pre-scaling = <10 81>;
+	};
+	adc-chan@5 {
+		reg = <VADC_VCOIN>;
+		qcom,pre-scaling = <1 3>;
+	};
+	adc-chan@6 {
+		reg = <VADC_VBAT_SNS>;
+		qcom,pre-scaling = <1 3>;
+	};
+	/* for bq24296 */
 	adc-chan@11 {
-		label = "VADC_P_MUX2_1_1";
-		reg = <0x11>;
-		qcom,decimation = <512>;
+		reg = <VADC_P_MUX2_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
 	};
-
+	/* for bq24296 */
 	adc-chan@13 {
-		label = "VADC_P_MUX4_1_1";
-		reg = <0x13>;
-		qcom,decimation = <512>;
+		reg = <VADC_P_MUX4_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
 	};
-
-	adc-chan@36 {
-		label = "VADC_LR_MUX7_HW_ID";
-		reg = <0x36>;
-		//qcom,decimation = <0>; wrong decimation?
+	adc-chan@30 {
+		reg = <VADC_LR_MUX1_BAT_THERM>;
+		qcom,pre-scaling = <1 1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <2>;
+	};
+	adc-chan@31 {
+		reg = <VADC_LR_MUX2_BAT_ID>;
+		qcom,pre-scaling = <1 1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <2>;
+	};
+	adc-chan@32 {
+		reg = <VADC_LR_MUX3_XO_THERM>;
+		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
+	};
+	/* for bq24296 */
+	adc-chan@36 {
+		reg = <VADC_LR_MUX7_HW_ID>;
+		qcom,pre-scaling = <1 1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <200>;
+	};
+	adc-chan@b {
+		reg = <VADC_CHG_TEMP>;
+		qcom,pre-scaling = <1 1>;
+		qcom,hw-settle-time = <0>;
+	};
+	adc-chan@3c {
+		reg = <VADC_LR_MUX3_BUF_XO_THERM>;
+		qcom,pre-scaling = <1 1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <200>;
 	};
 };
 
@@ -559,15 +592,15 @@
 };
 
 &usb {
-	extcon = <&usb_id>, <&usb_id>;
+	//extcon = <&usb_id>, <&usb_id>;
+	extcon = <&charger>, <&usb_id>;
+	vbus-supply = <&usb_otg_vbus>;
 	status = "okay";
-	//extcon = <&bq24296>, <&usb_id>;
-	//vbus-supply = <&usb_otg_vbus>;
 };
 
 &usb_hs_phy {
-	extcon = <&usb_id>;
-	//extcon = <&bq24296>;
+	//extcon = <&usb_id>;
+	extcon = <&charger>;
 };
 
 &wcnss {
@@ -707,10 +740,10 @@
 		bias-pull-up;
 	};
 
-    /*otg {
+    otg {
         gpio-hog;
         gpios = <108 GPIO_ACTIVE_HIGH>;
         output-high;
         line-name = "otg-gpio";
-    };*/
+    };
 };
