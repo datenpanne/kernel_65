@@ -61,23 +61,46 @@
 	battery: battery {
 		compatible = "simple-battery";
 		device-chemistry = "lithium-ion-polymer";
-		voltage-min-design-microvolt = <3400000>;
-		voltage-max-design-microvolt = <4400000>;
+
+		voltage-min-design-microvolt = <3350000>;
+		voltage-max-design-microvolt = <4350000>;
 		energy-full-design-microwatt-hours = <24700000>;
 		charge-full-design-microamp-hours = <6500000>;
 
 		precharge-current-microamp = <1300000>;
-		charge-term-current-microamp = <260000>;
+		charge-term-current-microamp = <260000>; //4%
+		factory-internal-resistance-micro-ohms = <118000>;
+		//operating-range-celsius = <0 52>;
+		//alert-celsius = <10 42>;
 
-		ocv-capacity-celsius = <25>;
-		ocv-capacity-table-0 = <4365000 100>, <4314000 95>, <4253000 90>,
-			<4194000 85>, <4137000 80>, <4084000 75>, <4032000 70>,
-			<3983000 65>, <3936000 60>, <3888000 55>, <3852000 50>,
-			<3826000 45>, <3806000 40>, <3789000 35>, <3779000 30>,
-			<3769000 25>, <3740000 20>, <3712000 16>, <3702000 13>,
-			<3692000 11>, <3690000 10>, <3688000 9>, <3687000 8>,
-			<3685000 7>, <3680000 6>, <3663000 5>, <3618000 4>,
-			<3558000 3>, <3478000 2>, <3352000 1>, <3000000 0>;
+		ocv-capacity-celsius = <(-25) 0 25>;
+		/* table for -20 degree Celsius  data from HB26A510EBC_GY_SWD-4v35-6500mah.dtsi*/
+		ocv-capacity-table-0 =  <4316000 100>,  <4200000 95>,  <4124000 90>,
+			<4025000 85>,  <3964000 80>,  <3918000 75>,  <3883000 70>,
+ 			<3857000 65>,  <3836000 60>,  <3817000 55>,  <3800000 50>,
+			 <3785000 45>,  <3770000 40>,  <3754000 35>,  <3737000 30>,
+			 <3717000 25>,  <3694000 20>,  <3669000 16>,  <3645000 13>,
+			 <3628000 11>,  <3616000 10>,  <3604000 9>,  <3586000 8>,
+			 <3568000 7>,  <3544000 6>,  <3516000 5>,  <3478000 4>,
+			 <3428000 3>,  <3360000 2>,  <3250000 1>,  <3000000 0>;
+		/* table for 0 degree Celsius */
+		ocv-capacity-table-1 =  <4315000 100>, <4250000 95>, <4190000 90>,
+			<4136000 85>, <4085000 80>, <4032000 75>, <3957000 70>,
+			<3918000 65>, <3885000 60>, <3854000 55>, <3828000 50>,
+			<3806000 45>, <3790000 40>, <3777000 35>, <3765000 30>,
+			<3751000 25>, <3732000 20>, <3712000 16>, <3698000 13>,
+			<3690000 11>, <3686000 10>, <3680000 9>, <3674000 8>,
+			<3664000 7>, <3648000 6>, <3623000 5>, <3584000 4>,
+			<3530000 3>, <3449000 2>, <3316000 1>, <3000000 0>;
+		/* table for 25 degree Celsius */
+		ocv-capacity-table-2 = <4315000 100>, <4260000 95>, <4204000 90>,
+			<4150000 85>, <4098000 80>, <4054000 75>, <3988000 70>,
+			<3953000 65>, <3910000 60>, <3868000 55>, <3838000 50>,
+			<3816000 45>, <3798000 40>, <3782000 35>, <3769000 30>,
+			<3754000 25>, <3736000 20>, <3716000 16>, <3696000 13>,
+			<3688000 11>, <3686000 10>, <3684000 9>, <3682000 8>,
+			<3678000 7>, <3668000 6>, <3644000 5>, <3600000 4>,
+			<3540000 3>, <3458000 2>, <3325000 1>, <3000000 0>;
 	};
 
 	gpio-hall-sensor {
@@ -272,14 +295,19 @@
 
 &blsp_i2c4 {
 	status = "okay";
+
 	charger: bq24192@6b {
 		compatible = "ti,bq24296";
 		reg = <0x6b>;
 		interrupt-parent = <&tlmm>;
-		interrupts = <62 IRQ_TYPE_EDGE_FALLING>;
-		//interrupts-extended = <&tlmm 62 IRQ_TYPE_EDGE_FALLING>;
+		interrupts = <62 IRQ_TYPE_LEVEL_HIGH>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&bq24192_charger_default>;
+		pinctrl-1 = <&bq24192_charger_sleep>;
 		omit-battery-class;
-		usb_otg_vbus: usb-otg-vbus { };
+		usb_otg_vbus: usb-otg-vbus {
+			regulator-max-microamp = <1000000>;
+		};
 	};
 };
 
@@ -369,6 +397,7 @@
 	status = "okay";
 
 	monitored-battery = <&battery>;
+	power-supplies = <&charger>;
 };
 
 &pm8916_codec {
@@ -505,7 +534,7 @@
 	pinctrl-1 = <&sdc2_sleep &sdc2_cd_default>;
 	pinctrl-names = "default", "sleep";
 
-	cd-gpios = <&tlmm 38 GPIO_ACTIVE_HIGH>;
+	cd-gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
 
 	status = "okay";
 };
@@ -586,6 +615,20 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
+	};
+
+	bq24192_charger_default: bq24196-charger-default-state  {
+		pins = "gpio62";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	bq24192_charger_sleep: bq24196-charger-sleep-state  {
+		pins = "gpio62";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
 	};
 
 	gpio_hall_sensor_default: gpio-hall-sensor-default-state {
@@ -710,5 +753,35 @@
         gpios = <108 GPIO_ACTIVE_HIGH>;
         output-high;
         line-name = "otg-gpio";
+    };
+};
+
+/ {
+/* was #include <dt-bindings/power/power.h> */
+
+#define POWER_SUPPLY_TECHNOLOGY_NiMH 1
+#define POWER_SUPPLY_TECHNOLOGY_LION 2
+#define POWER_SUPPLY_TECHNOLOGY_LIPO 3
+#define POWER_SUPPLY_TECHNOLOGY_LiFe 4
+#define POWER_SUPPLY_TECHNOLOGY_NiCd 5
+#define POWER_SUPPLY_TECHNOLOGY_LiMn 6
+
+    fuel-gauge {
+	    compatible = "adc-battery";
+	    #address-cells = <1>;
+	    #size-cells = <0>;
+
+		io-channels = <&pm8916_vadc 6>, <&pm8916_vadc 11>;//, <&pm8916_vadc 30>;
+		io-channel-names = "voltage", "current";//, "temperature";
+
+	    //charged-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
+	    monitored-battery = <&battery>;
+	    power-supplies = <&charger>;
+	    technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
+	    battery-name = "huawei-battery";
+	    charge_full_design = <6500000>;
+	    charge_empty_design = <00>;
+	    voltage_min_design = <3350000>;
+	    voltage_max_design = <4350000>;
     };
 };
