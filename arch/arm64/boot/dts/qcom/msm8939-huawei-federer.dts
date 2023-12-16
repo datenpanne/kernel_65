@@ -143,38 +143,6 @@
 		};
 	};
 
-	lcd_pp3300: regulator-pp3300 {
-		compatible = "regulator-fixed";
-		regulator-name = "lcd_3v3";
-		//vin-supply = <&pm8916_l16>;
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		regulator-always-on;
-		regulator-boot-on;
-
-		/*gpio = <&tlmm 32 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_3v3_default>;*/
-	};
-
-	lcd_pp1800: regulator-pp1800 {
-		compatible = "regulator-fixed";
-		regulator-name = "lcd_1v8";
-		//vin-supply = <&pm8916_l16>;
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		regulator-always-on;
-		regulator-boot-on;
-
-		/*gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_1v8_default>;*/
-	};
-
 	reg_tp_vdd: regulator-tp-vdd {
 		compatible = "regulator-fixed";
 		regulator-name = "tp_vdd";
@@ -366,18 +334,15 @@
 	status = "okay";
 
 	panel@0 {
-		compatible = "huawei,nt51021";
-		//compatible = "novatek,nt51021";
+		compatible = "huawei,federer-panel";
 		reg = <0>;
 
-		//backlight = <&backlight>;
-		//pp1800-supply = <&pm8916_l6>;
-		pp3300-supply = <&lcd_pp3300>;
+		vddio-supply = <&pm8916_l6>;
 		vsp-supply = <&reg_lcd_vsp>;
 		vsn-supply = <&reg_lcd_vsn>;
-		/*panel-gpios = <&tlmm 32 GPIO_ACTIVE_HIGH>;
+		vdd-gpios = <&tlmm 32 GPIO_ACTIVE_HIGH>;
 		backlight-gpios = <&tlmm 109 GPIO_ACTIVE_HIGH>;
-		vled-gpios = <&tlmm 97 GPIO_ACTIVE_HIGH>;*/
+		vled-gpios = <&tlmm 97 GPIO_ACTIVE_HIGH>;
 
 		reset-gpios = <&tlmm 25 GPIO_ACTIVE_LOW>;
 		te-gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
