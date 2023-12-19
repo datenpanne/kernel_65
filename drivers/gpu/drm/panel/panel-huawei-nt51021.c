@@ -556,7 +556,7 @@ static int hw_nt51021_bl_update_status(struct backlight_device *bl)
 	int ret;
 
 //	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	gpiod_set_value_cansleep(ctx->bl_gpio, !!brightness);
+	gpiod_set_value_cansleep(boe->bl_gpio, !!brightness);
 
 	usleep_range(20000, 25000);
 	ret = hw_nt51021_bl(dsi, brightness);
