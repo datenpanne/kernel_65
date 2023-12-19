@@ -137,7 +137,7 @@ static const struct panel_init_cmd boe_nt51021_10_init_cmd[] = {
 };
 
 static const struct panel_init_cmd cmi_nt51021_10_init_cmd[] = {
-	_INIT_DCS_CMD(0x21),
+	//_INIT_DCS_CMD(0x21),
 	_INIT_DCS_CMD(HW_NT51021_VND_MIPI, 0xa5),
 	_INIT_DELAY_CMD(20),
 	_INIT_DCS_CMD(0x01),
@@ -286,8 +286,8 @@ static int boe_panel_unprepare(struct drm_panel *panel)
 	if (!boe->prepared)
 		return 0;
 
-	gpiod_set_value(boe->bl_gpio, 0);
-	usleep_range(5000, 7000);
+	/*gpiod_set_value(boe->bl_gpio, 0);
+	usleep_range(5000, 7000);*/
 
 	regulator_disable(boe->vsp);
 	regulator_disable(boe->vsn);
@@ -323,7 +323,7 @@ static int boe_panel_prepare(struct drm_panel *panel)
 		//return ret;
 		goto poweroff1v8;
 
-	gpiod_set_value_cansleep(boe->bl_gpio, 1);
+	//gpiod_set_value_cansleep(boe->bl_gpio, 1);
 	gpiod_set_value_cansleep(boe->vdd_gpio, 1);
 	//usleep_range(2000, 4000);
 	msleep(500);
@@ -466,7 +466,7 @@ static const struct panel_desc cmi_nt51021_10_desc = {
 	.mode_flags = MIPI_DSI_MODE_VIDEO
 			| MIPI_DSI_MODE_VIDEO_BURST
 			| MIPI_DSI_MODE_VIDEO_HSE
-            | MIPI_DSI_MODE_NO_EOT_PACKET
+			| MIPI_DSI_MODE_NO_EOT_PACKET
 			| MIPI_DSI_CLOCK_NON_CONTINUOUS,
 	.init_cmds = cmi_nt51021_10_init_cmd,
 };
@@ -550,12 +550,13 @@ static int hw_nt51021_bl_update_status(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
     //struct drm_panel *base;
-	//struct boe_panel *boe = dev_get_drvdata(&bl->dev);
+	struct boe_panel *boe = dev_get_drvdata(&bl->dev);
 	//struct hw_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	u16 brightness = bl->props.brightness;
 	int ret;
 
 //	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	gpiod_set_value_cansleep(ctx->bl_gpio, !!brightness);
 
 	usleep_range(20000, 25000);
 	ret = hw_nt51021_bl(dsi, brightness);

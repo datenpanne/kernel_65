@@ -253,6 +253,20 @@
 		sound-name-prefix = "Speaker Amp";
 	};
 
+	/* this is a power switch that connects otg power from bq24296 to the usb socket */
+	otg_path: otg-path {
+		compatible = "regulator-fixed";
+		regulator-name = "otg_path";
+		vin-supply = <&usb_otg_vbus>;	/* request otg booster of bq24296 */
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+
+		gpio =  <&tlmm 108 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&otg_path_default>;
+	};
+
 	usb_id: usb-id {
 		compatible = "linux,extcon-usb-gpio";
 		id-gpio = <&tlmm 117 GPIO_ACTIVE_HIGH>;
@@ -305,9 +319,7 @@
 		pinctrl-0 = <&bq24192_charger_default>;
 		pinctrl-1 = <&bq24192_charger_sleep>;
 		omit-battery-class;
-		usb_otg_vbus: usb-otg-vbus {
-			regulator-max-microamp = <1000000>;
-		};
+		usb_otg_vbus: usb-otg-vbus {	};
 	};
 };
 
@@ -697,6 +709,13 @@
 		bias-pull-down;
 	};
 
+	otg_path_default: otg-path-default-state {
+		pins = "gpio108";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
 	sdc2_cd_default: sdc2-cd-default-state {
 		pins = "gpio38";
 		function = "gpio";
@@ -748,12 +767,12 @@
 		bias-pull-up;
 	};
 
-    otg {
+   /* otg {
         gpio-hog;
         gpios = <108 GPIO_ACTIVE_HIGH>;
         output-high;
         line-name = "otg-gpio";
-    };
+    };*/
 };
 
 / {
