@@ -62,7 +62,7 @@ struct boe_panel {
 	struct gpio_desc *vled_gpio;
 	struct gpio_desc *reset_gpio;
 
-    int hw_led_en_flag;
+	int hw_led_en_flag;
 
 	bool prepared;
 	bool enabled;
@@ -286,8 +286,8 @@ static int boe_panel_unprepare(struct drm_panel *panel)
 	if (!boe->prepared)
 		return 0;
 
-	/*gpiod_set_value(boe->bl_gpio, 0);
-	usleep_range(5000, 7000);*/
+	gpiod_set_value(boe->bl_gpio, 0);
+	usleep_range(5000, 7000);
 
 	regulator_disable(boe->vsp);
 	regulator_disable(boe->vsn);
@@ -323,7 +323,7 @@ static int boe_panel_prepare(struct drm_panel *panel)
 		//return ret;
 		goto poweroff1v8;
 
-	//gpiod_set_value_cansleep(boe->bl_gpio, 1);
+	gpiod_set_value_cansleep(boe->bl_gpio, 1);
 	gpiod_set_value_cansleep(boe->vdd_gpio, 1);
 	//usleep_range(2000, 4000);
 	msleep(500);
@@ -550,14 +550,12 @@ static int hw_nt51021_bl_update_status(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
     //struct drm_panel *base;
-	struct boe_panel *boe = dev_get_drvdata(&bl->dev);
+	//struct boe_panel *boe = dev_get_drvdata(&bl->dev);
 	//struct hw_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	u16 brightness = bl->props.brightness;
 	int ret;
 
 //	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	gpiod_set_value_cansleep(boe->bl_gpio, !!brightness);
-
 	usleep_range(20000, 25000);
 	ret = hw_nt51021_bl(dsi, brightness);
 	if (ret < 0)

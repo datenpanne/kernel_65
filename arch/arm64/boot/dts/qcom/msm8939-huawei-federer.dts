@@ -319,7 +319,7 @@
 		pinctrl-0 = <&bq24192_charger_default>;
 		pinctrl-1 = <&bq24192_charger_sleep>;
 		omit-battery-class;
-		usb_otg_vbus: usb-otg-vbus {	};
+		usb_otg_vbus: usb-otg-vbus { };
 	};
 };
 
@@ -335,10 +335,6 @@
 
 		reset-gpios = <&tlmm 12 GPIO_ACTIVE_LOW>;
 
-		/*
-		 * NOTE: vdd is not directly supplied by pm8916_l16, it seems to be a
-		 * fixed regulator that is automatically enabled by pm8916_l16.
-		 */
 		vdd-supply = <&reg_tp_vdd>;
 		vddio-supply = <&pm8916_l16>;
 
@@ -471,65 +467,83 @@
 };
 
 &pm8916_vadc {
-	adc-chan@2 {
+	channel@2 {
 		reg = <VADC_VCHG_SNS>;
 		qcom,pre-scaling = <10 81>;
+		label = "ireg_fb";
 	};
-	adc-chan@5 {
+
+	channel@5 {
 		reg = <VADC_VCOIN>;
 		qcom,pre-scaling = <1 3>;
+		label = "vcoin";
 	};
-	adc-chan@6 {
+
+	channel@6 {
 		reg = <VADC_VBAT_SNS>;
 		qcom,pre-scaling = <1 3>;
+		label = "vbat_sns";
 	};
-	/* for bq24296 */
-	adc-chan@11 {
+
+	channel@11 {
 		reg = <VADC_P_MUX2_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
+		label = "pa_therm1";
 	};
-	/* for bq24296 */
-	adc-chan@13 {
+
+	channel@13 {
 		reg = <VADC_P_MUX4_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
+		label = "case_therm";
 	};
-	adc-chan@30 {
+
+	channel@b {
+		reg = <VADC_CHG_TEMP>;
+		qcom,pre-scaling = <1 1>;
+		qcom,hw-settle-time = <0>;
+		label = "chg_temp";
+	};
+
+	channel@30 {
 		reg = <VADC_LR_MUX1_BAT_THERM>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
-		qcom,hw-settle-time = <2>;
+		qcom,hw-settle-time = <200>;
+		label = "batt_therm";
 	};
-	adc-chan@31 {
+
+	channel@31 {
 		reg = <VADC_LR_MUX2_BAT_ID>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <2>;
+		label = "batt_id";
 	};
-	adc-chan@32 {
+
+	channel@32 {
 		reg = <VADC_LR_MUX3_XO_THERM>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
+		label = "xo_therm";
 	};
-	/* for bq24296 */
-	adc-chan@36 {
+
+	channel@36 {
 		reg = <VADC_LR_MUX7_HW_ID>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
+		label = "pa_therm0";
 	};
-	adc-chan@b {
-		reg = <VADC_CHG_TEMP>;
-		qcom,pre-scaling = <1 1>;
-		qcom,hw-settle-time = <0>;
-	};
-	adc-chan@3c {
+
+	channel@3c {
 		reg = <VADC_LR_MUX3_BUF_XO_THERM>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
+		label = "xo_therm_buf";
 	};
 };
 
@@ -605,8 +619,8 @@
 };
 
 &usb_hs_phy {
-	//extcon = <&usb_id>;
-	extcon = <&charger>;
+	extcon = <&usb_id>;
+	//extcon = <&charger>;
 };
 
 &wcnss {
