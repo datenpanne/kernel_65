@@ -54,11 +54,11 @@ struct boe_panel {
 
 	enum drm_panel_orientation orientation;
 
-	struct regulator *vddio;
+	struct regulator *vdd;
 	struct regulator *vsp;
 	struct regulator *vsn;
-	struct gpio_desc *vdd_gpio;
-	struct gpio_desc *bl_gpio;
+	struct gpio_desc *power_gpio;
+	struct gpio_desc *blpwr_gpio;
 	struct gpio_desc *vled_gpio;
 	struct gpio_desc *reset_gpio;
 
@@ -286,15 +286,15 @@ static int boe_panel_unprepare(struct drm_panel *panel)
 	if (!boe->prepared)
 		return 0;
 
-	gpiod_set_value(boe->bl_gpio, 0);
+	gpiod_set_value(boe->blpwr_gpio, 0);
 	usleep_range(5000, 7000);
 
 	regulator_disable(boe->vsp);
 	regulator_disable(boe->vsn);
 	usleep_range(3000, 4000);
 
-	regulator_disable(boe->vddio);
-	gpiod_set_value(boe->vdd_gpio, 0);
+	regulator_disable(boe->vdd);
+	gpiod_set_value(boe->power_gpio, 0);
 	msleep(300);
 
 	gpiod_set_value(boe->reset_gpio, 1);
@@ -313,39 +313,40 @@ static int boe_panel_prepare(struct drm_panel *panel)
 	if (boe->prepared)
 		return 0;
 
-	ret = regulator_enable(boe->vddio);
+	ret = regulator_enable(boe->vdd);
 	if (ret < 0)
 		return ret;
-	usleep_range(3000, 5000);
+	usleep_range(10000, 11000);
 
 	ret = regulator_enable(boe->vsp);
 	if (ret < 0)
 		//return ret;
 		goto poweroff1v8;
 
-	gpiod_set_value_cansleep(boe->bl_gpio, 1);
-	gpiod_set_value_cansleep(boe->vdd_gpio, 1);
+	ret = regulator_enable(boe->vsn);
+	if (ret < 0)
+		goto poweroffvsp;
+	usleep_range(1000, 1100);
+
+	gpiod_set_value_cansleep(boe->blpwr_gpio, 1);
+	gpiod_set_value_cansleep(boe->power_gpio, 1);
 	//usleep_range(2000, 4000);
 	msleep(500);
 	//usleep_range(10000, 11000);
 
 	gpiod_set_value_cansleep(boe->reset_gpio, 0);
-	usleep_range(1000, 2000);
+	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(boe->reset_gpio, 1);
-	msleep(20);
+	usleep_range(5000, 6000);
 	gpiod_set_value_cansleep(boe->reset_gpio, 0);
 	msleep(30);
-
-	ret = regulator_enable(boe->vsn);
-	if (ret < 0)
-		goto poweroffvsp;
 
 	ret = mipi_dsi_dcs_set_display_on(dsi);
 	if (ret) {
 		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
 		return ret;
 	}
-	usleep_range(20000, 22000);
+	usleep_range(10000, 11000);
 
     dsi->mode_flags |= MIPI_DSI_MODE_LPM;
 
@@ -382,12 +383,12 @@ poweroff:
 	regulator_disable(boe->vsn);
 poweroffvsp:
 	regulator_disable(boe->vsp);
-	gpiod_set_value_cansleep(boe->bl_gpio, 0);
-	gpiod_set_value_cansleep(boe->vdd_gpio, 0);
+	gpiod_set_value_cansleep(boe->blpwr_gpio, 0);
+	gpiod_set_value_cansleep(boe->power_gpio, 0);
 	usleep_range(2000, 4000);
 poweroff1v8:
 //	usleep_range(5000, 7000);
-	regulator_disable(boe->vddio);
+	regulator_disable(boe->vdd);
 	gpiod_set_value(boe->reset_gpio, 1);
 
 	return ret;
@@ -443,15 +444,15 @@ static const struct panel_desc boe_nt51021_10_desc = {
 };
 
 static const struct drm_display_mode cmi_nt51021_10_default_mode = {
-	.clock = (1200 + 64 + 4 + 36) * (1920 + 104 + 2 + 24) * 60 / 1000,
+	.clock = (1200 + 60 + 24+ 80) * (1920 + 14 + 2 + 10) * 60 / 1000,
 	.hdisplay = 1200,
-	.hsync_start = 1200 + 64,
-	.hsync_end = 1200 + 64 + 4,
-	.htotal = 1200 + 64 + 4 + 36,
+	.hsync_start = 1200 + 60,
+	.hsync_end = 1200 + 60 + 24,
+	.htotal = 1200 + 60 + 24+ 80,
 	.vdisplay = 1920,
-	.vsync_start = 1920 + 104,
-	.vsync_end = 1920 + 104 + 2,
-	.vtotal = 1920 + 104 + 2 + 24,
+	.vsync_start = 1920 + 14,
+	.vsync_end = 1920 + 14 + 2,
+	.vtotal = 1920 + 14 + 2 + 10,
 };
 
 static const struct panel_desc cmi_nt51021_10_desc = {
@@ -606,9 +607,9 @@ static int boe_panel_add(struct boe_panel *boe)
 	if (IS_ERR(boe->vsn))
 		return PTR_ERR(boe->vsn);
 
-	boe->vddio = devm_regulator_get(dev, "vddio");
-	if (IS_ERR(boe->vddio))
-		return PTR_ERR(boe->vddio);
+	boe->vdd = devm_regulator_get(dev, "vdd");
+	if (IS_ERR(boe->vdd))
+		return PTR_ERR(boe->vdd);
 
 	boe->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(boe->reset_gpio)) {
@@ -617,21 +618,21 @@ static int boe_panel_add(struct boe_panel *boe)
 		return PTR_ERR(boe->reset_gpio);
 	}
 
-	boe->bl_gpio = devm_gpiod_get(dev, "backlight", GPIOD_OUT_HIGH);
-	if (IS_ERR(boe->bl_gpio)) {
+	boe->blpwr_gpio = devm_gpiod_get(dev, "blpwr", GPIOD_OUT_HIGH);
+	if (IS_ERR(boe->blpwr_gpio)) {
 		dev_err(dev, "cannot get bl-gpios %ld\n",
-			PTR_ERR(boe->bl_gpio));
-		return PTR_ERR(boe->bl_gpio);
+			PTR_ERR(boe->blpwr_gpio));
+		return PTR_ERR(boe->blpwr_gpio);
 	}
 
-	boe->vdd_gpio = devm_gpiod_get(dev, "vdd", GPIOD_OUT_HIGH);
-	if (IS_ERR(boe->vdd_gpio)) {
+	boe->power_gpio = devm_gpiod_get(dev, "power", GPIOD_OUT_HIGH);
+	if (IS_ERR(boe->power_gpio)) {
 		dev_err(dev, "cannot get vdd-gpios %ld\n",
-			PTR_ERR(boe->vdd_gpio));
-		return PTR_ERR(boe->vdd_gpio);
+			PTR_ERR(boe->power_gpio));
+		return PTR_ERR(boe->power_gpio);
 	}
 
-	boe->vled_gpio = devm_gpiod_get(dev, "vled", GPIOD_OUT_HIGH);
+	boe->vled_gpio = devm_gpiod_get(dev, "backlight", GPIOD_OUT_HIGH);
 	if (IS_ERR(boe->vled_gpio)) {
 		dev_err(dev, "cannot get vled-gpios %ld\n",
 			PTR_ERR(boe->vled_gpio));

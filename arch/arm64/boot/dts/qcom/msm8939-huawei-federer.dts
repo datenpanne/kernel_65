@@ -3,12 +3,13 @@
 /dts-v1/;
 
 #include "msm8939-pm8916.dtsi"
+#include "msm8916-modem.dtsi"
+
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
-#include <dt-bindings/sound/apq8016-lpass.h>
 #include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
 
 / {
@@ -20,6 +21,7 @@
 		mmc0 = &sdhc_1; /* eMMC */
 		mmc1 = &sdhc_2; /* SD card */
 		serial0 = &blsp_uart2;
+		i2c0 = &blsp_i2c2;
 	};
 
 	chosen {
@@ -29,17 +31,12 @@
 	reserved-memory {
 		cont_splash_mem: framebuffer@83000000 {
 			compatible = "removed-dma-pool";
-			reg = <0x0 0x83000000 0x0 0x2000000>;
+			reg = <0x0 0x83000000 0x0 0x1400000>;
 			no-map;
 		};
 
-		reserved@85000000 {
-			reg = <0x0 0x85000000 0x0 0x1000000>;
-			no-map;
-		};
-
-		reserved@84a00000 {
-			reg = <0x0 0x84a00000 0x0 0x1600000>;
+		reserved@84400000 {
+			reg = <0x0 0x84400000 0x0 0x1C00000>;
 			no-map;
 		};
 
@@ -275,14 +272,6 @@
 	};
 };
 
-/*speaker*/
-&blsp_spi1 {
-	mosi-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
-	miso-gpios = <&tlmm 1 GPIO_ACTIVE_HIGH>;
-	cs-gpios = <&tlmm 2 GPIO_ACTIVE_HIGH>;
-	sck-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
-};
-
 &blsp_i2c2 {
 	status = "okay";
 
@@ -325,6 +314,7 @@
 
 &blsp_i2c5 {
 	status = "okay";
+	clock-frequency = <400000>;
 
 	touchscreen@1a {
 		compatible = "cypress,tt21000";
@@ -351,14 +341,6 @@
 	status = "okay";
 };
 
-&lpass {
-	status = "okay";
-};
-
-&lpass_codec {
-	status = "okay";
-};
-
 &mdss {
 	status = "okay";
 };
@@ -373,12 +355,12 @@
 		compatible = "huawei,federer-panel";
 		reg = <0>;
 
-		vddio-supply = <&pm8916_l6>;
+		vdd-supply = <&pm8916_l6>;
 		vsp-supply = <&reg_lcd_vsp>;
 		vsn-supply = <&reg_lcd_vsn>;
-		vdd-gpios = <&tlmm 32 GPIO_ACTIVE_HIGH>;
-		backlight-gpios = <&tlmm 109 GPIO_ACTIVE_HIGH>;
-		vled-gpios = <&tlmm 97 GPIO_ACTIVE_HIGH>;
+		power-gpios = <&tlmm 32 GPIO_ACTIVE_HIGH>;
+		backlight-gpios = <&tlmm 97 GPIO_ACTIVE_HIGH>;
+		blpwr-gpios = <&tlmm  109 GPIO_ACTIVE_HIGH>;
 
 		reset-gpios = <&tlmm 25 GPIO_ACTIVE_LOW>;
 		te-gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
@@ -399,6 +381,10 @@
 &mdss_dsi0_phy {
 	qcom,dsi-phy-regulator-ldo-mode;
 	status = "okay";
+};
+
+&mpss_mem {
+	reg = <0x0 0x86800000 0x0 0x5600000>;
 };
 
 &pm8916_bms {
@@ -567,10 +553,7 @@
 
 &sound {
 	status = "okay";
-	pinctrl-names = "default", "sleep";
 
-	pinctrl-0 = <&cdc_pdm_default>;
-	pinctrl-1 = <&cdc_pdm_sleep>;
 	model = "wt86528";
 	widgets =
 		"Speaker", "Speaker",
@@ -589,26 +572,6 @@
 		"AMIC2", "MIC BIAS External2",
 		"AMIC3", "MIC BIAS External1";
 	aux-devs = <&speaker_amp>, <&headphones_switch>;
-
-	dai-link-primary {
-		link-name = "Primary MI2S";
-		cpu {
-			sound-dai = <&lpass MI2S_PRIMARY>;
-		};
-		codec {
-			sound-dai = <&lpass_codec 0>, <&pm8916_codec 0>;
-		};
-	};
-
-	dai-link-tertiary {
-		link-name = "Tertiary MI2S";
-		cpu {
-			sound-dai = <&lpass MI2S_TERTIARY>;
-		};
-		codec {
-			sound-dai = <&lpass_codec 1>, <&pm8916_codec 1>;
-		};
-	};
 };
 
 &usb {
@@ -780,13 +743,6 @@
 		drive-strength = <8>;
 		bias-pull-up;
 	};
-
-   /* otg {
-        gpio-hog;
-        gpios = <108 GPIO_ACTIVE_HIGH>;
-        output-high;
-        line-name = "otg-gpio";
-    };*/
 };
 
 / {
