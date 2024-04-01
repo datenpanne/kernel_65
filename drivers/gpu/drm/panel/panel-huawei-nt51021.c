@@ -227,6 +227,16 @@ static int boe_panel_init_cmd(struct boe_panel *boe)
 	return 0;
 }
 
+static void hw_nt51021_reset(struct boe_panel *boe)
+{
+	gpiod_set_value_cansleep(boe->reset_gpio, 0);
+	usleep_range(10000, 11000);
+	gpiod_set_value_cansleep(boe->reset_gpio, 1);
+	usleep_range(5000, 6000);
+	gpiod_set_value_cansleep(boe->reset_gpio, 0);
+	usleep_range(500, 600);
+}
+
 static void hw_nt51021_bias_set(struct boe_panel *boe, int enabled)
 {
 	//struct boe_panel *boe = to_boe_panel(panel);
@@ -318,6 +328,10 @@ static int boe_panel_prepare(struct drm_panel *panel)
 		return ret;
 	usleep_range(10000, 11000);
 
+	gpiod_set_value_cansleep(boe->power_gpio, 1);
+	//usleep_range(2000, 4000);
+	msleep(500);
+
 	ret = regulator_enable(boe->vsp);
 	if (ret < 0)
 		//return ret;
@@ -329,23 +343,8 @@ static int boe_panel_prepare(struct drm_panel *panel)
 	usleep_range(1000, 1100);
 
 	gpiod_set_value_cansleep(boe->blpwr_gpio, 1);
-	gpiod_set_value_cansleep(boe->power_gpio, 1);
-	//usleep_range(2000, 4000);
-	msleep(500);
-	//usleep_range(10000, 11000);
 
-	gpiod_set_value_cansleep(boe->reset_gpio, 0);
-	usleep_range(10000, 11000);
-	gpiod_set_value_cansleep(boe->reset_gpio, 1);
-	usleep_range(5000, 6000);
-	gpiod_set_value_cansleep(boe->reset_gpio, 0);
-	msleep(30);
-
-	ret = mipi_dsi_dcs_set_display_on(dsi);
-	if (ret) {
-		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
-		return ret;
-	}
+	hw_nt51021_reset(boe);
 	usleep_range(10000, 11000);
 
     dsi->mode_flags |= MIPI_DSI_MODE_LPM;
@@ -360,15 +359,22 @@ static int boe_panel_prepare(struct drm_panel *panel)
 	if (ret < 0) {
 		dev_err(panel->dev, "Failed to exit sleep mode: %d\n", ret);
 		return ret;
-    }
+	}
 
-	ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
+	ret = mipi_dsi_dcs_set_display_on(dsi);
+	if (ret) {
+		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
+		return ret;
+	}
+	usleep_range(10000, 11000);
+
+	/*ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
 	if (ret < 0) {
 		dev_err(panel->dev, "Failed to set tear on: %d\n", ret);
 		return ret;
 	}
 
-	/*ret = mipi_dsi_dcs_set_display_on(dsi);
+	ret = mipi_dsi_dcs_set_display_on(dsi);
 	if (ret) {
 		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
 		return ret;
