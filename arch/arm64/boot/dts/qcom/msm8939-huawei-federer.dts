@@ -216,7 +216,7 @@
 		pinctrl-0 = <&sp_boost_default>;
 	};
 
-	reg_sp_swich: regulator-sp-swich {
+	/*reg_sp_swich: regulator-sp-swich {
 		compatible = "regulator-fixed";
 		regulator-name = "sp_swich";
 		vin-supply = <&reg_sp_boost>;
@@ -226,7 +226,7 @@
 		//startup-delay-us = <200000>; //delay 200
 		pinctrl-names = "default";
 		pinctrl-0 = <&sp_swich_default>;
-	};
+	};*/
 
 	headphones_switch: audio-switch {
 		compatible = "simple-audio-amplifier";
@@ -240,7 +240,7 @@
 
 	speaker_amp: audio-amplifier {
 		compatible = "simple-audio-amplifier";
-		VCC-supply = <&reg_sp_swich>;
+		VCC-supply = <&reg_sp_boost>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&speaker_amp_default>;
@@ -250,11 +250,11 @@
 		sound-name-prefix = "Speaker Amp";
 	};
 
-	/* this is a power switch that connects otg power from bq24296 to the usb socket */
+	/* this is a power switch that connects otg power from bq24296 to the usb socket
 	otg_path: otg-path {
 		compatible = "regulator-fixed";
 		regulator-name = "otg_path";
-		vin-supply = <&usb_otg_vbus>;	/* request otg booster of bq24296 */
+		vin-supply = <&usb_otg_vbus>;	// request otg booster of bq24296
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 
@@ -262,7 +262,7 @@
 		enable-active-high;
 		pinctrl-names = "default";
 		pinctrl-0 = <&otg_path_default>;
-	};
+	}; */
 
 	usb_id: usb-id {
 		compatible = "linux,extcon-usb-gpio";
@@ -295,11 +295,11 @@
 		vio-supply = <&pm8916_l6>;
 	};
 };
-
+/*
 &blsp_i2c4 {
 	status = "okay";
 
-	charger: bq24192@6b {
+	charger: bq24296@6b {
 		compatible = "ti,bq24296";
 		reg = <0x6b>;
 		interrupt-parent = <&tlmm>;
@@ -310,7 +310,7 @@
 		omit-battery-class;
 		usb_otg_vbus: usb-otg-vbus { };
 	};
-};
+};*/
 
 &blsp_i2c5 {
 	status = "okay";
@@ -384,14 +384,14 @@
 };
 
 &mpss_mem {
-	reg = <0x0 0x86800000 0x0 0x5600000>;
+	size = <0x0 0x5600000>;
 };
 
 &pm8916_bms {
 	status = "okay";
 
 	monitored-battery = <&battery>;
-	power-supplies = <&charger>;
+	//power-supplies = <&charger>;
 };
 
 &pm8916_codec {
@@ -575,9 +575,9 @@
 };
 
 &usb {
-	//extcon = <&usb_id>, <&usb_id>;
-	extcon = <&charger>, <&usb_id>;
-	vbus-supply = <&usb_otg_vbus>;
+	extcon = <&usb_id>, <&usb_id>;
+	//extcon = <&charger>, <&usb_id>;
+	//vbus-supply = <&usb_otg_vbus>;
 	status = "okay";
 };
 
@@ -765,7 +765,7 @@
 
 	    //charged-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
 	    monitored-battery = <&battery>;
-	    power-supplies = <&charger>;
+	  //  power-supplies = <&charger>;
 	    technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
 	    battery-name = "huawei-battery";
 	    charge_full_design = <6500000>;
