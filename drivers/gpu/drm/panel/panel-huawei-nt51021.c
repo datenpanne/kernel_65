@@ -63,9 +63,6 @@ struct boe_panel {
 	struct gpio_desc *reset_gpio;
 
 	int hw_led_en_flag;
-
-	bool prepared;
-	bool enabled;
 };
 
 enum dsi_cmd_type {
@@ -229,11 +226,11 @@ static int boe_panel_init_cmd(struct boe_panel *boe)
 
 static void hw_nt51021_reset(struct boe_panel *boe)
 {
-	gpiod_set_value_cansleep(boe->reset_gpio, 0);
+	gpiod_direction_output(boe->reset_gpio, 0);
 	usleep_range(10000, 11000);
-	gpiod_set_value_cansleep(boe->reset_gpio, 1);
+	gpiod_direction_output(boe->reset_gpio, 1);
 	usleep_range(5000, 6000);
-	gpiod_set_value_cansleep(boe->reset_gpio, 0);
+	gpiod_direction_output(boe->reset_gpio, 0);
 	usleep_range(500, 600);
 }
 
@@ -274,9 +271,6 @@ static int boe_panel_disable(struct drm_panel *panel)
 	struct boe_panel *boe = to_boe_panel(panel);
 	int ret;
 
-	if (!boe->enabled)
-		return 0;
-
 	ret = boe_panel_enter_sleep_mode(boe);
 	if (ret < 0) {
 		dev_err(panel->dev, "failed to set panel off: %d\n", ret);
@@ -285,16 +279,12 @@ static int boe_panel_disable(struct drm_panel *panel)
 
 	msleep(120);
 
-	boe->enabled = false;
 	return 0;
 }
 
 static int boe_panel_unprepare(struct drm_panel *panel)
 {
 	struct boe_panel *boe = to_boe_panel(panel);
-
-	if (!boe->prepared)
-		return 0;
 
 	gpiod_set_value(boe->blpwr_gpio, 0);
 	usleep_range(5000, 7000);
@@ -309,28 +299,19 @@ static int boe_panel_unprepare(struct drm_panel *panel)
 
 	gpiod_set_value(boe->reset_gpio, 1);
 
-	boe->prepared = false;
-
 	return 0;
 }
 
 static int boe_panel_prepare(struct drm_panel *panel)
 {
 	struct boe_panel *boe = to_boe_panel(panel);
-	struct mipi_dsi_device *dsi = boe->dsi;
-	int ret;
-
-	if (boe->prepared)
-		return 0;
+	//struct mipi_dsi_device *dsi = boe->dsi;
+	//int ret;
 
 	ret = regulator_enable(boe->vdd);
 	if (ret < 0)
 		return ret;
 	usleep_range(10000, 11000);
-
-	gpiod_set_value_cansleep(boe->power_gpio, 1);
-	//usleep_range(2000, 4000);
-	msleep(500);
 
 	ret = regulator_enable(boe->vsp);
 	if (ret < 0)
@@ -342,12 +323,56 @@ static int boe_panel_prepare(struct drm_panel *panel)
 		goto poweroffvsp;
 	usleep_range(1000, 1100);
 
-	gpiod_set_value_cansleep(boe->blpwr_gpio, 1);
+	gpiod_set_value(boe->blpwr_gpio, 1);
+
+	gpiod_set_value(boe->power_gpio, 1);
+	//usleep_range(2000, 4000);
+	msleep(500);
 
 	hw_nt51021_reset(boe);
 	usleep_range(10000, 11000);
 
-    dsi->mode_flags |= MIPI_DSI_MODE_LPM;
+	/*ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
+	if (ret < 0) {
+		dev_err(panel->dev, "Failed to set tear on: %d\n", ret);
+		return ret;
+	}
+
+	ret = mipi_dsi_dcs_set_display_on(dsi);
+	if (ret) {
+		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
+		return ret;
+	}
+	usleep_range(80000, 90000);*/
+
+	return 0;
+
+poweroff:
+	regulator_disable(boe->vsn);
+poweroffvsp:
+	regulator_disable(boe->vsp);
+	gpiod_set_value(boe->blpwr_gpio, 0);
+	gpiod_set_value(boe->power_gpio, 0);
+	usleep_range(2000, 4000);
+poweroff1v8:
+//	usleep_range(5000, 7000);
+	regulator_disable(boe->vdd);
+	gpiod_set_value(boe->reset_gpio, 1);
+
+	return ret;
+}
+
+static int boe_panel_enable(struct drm_panel *panel)
+{
+	struct boe_panel *boe = to_boe_panel(panel);
+	struct mipi_dsi_device *dsi = boe->dsi;
+	int ret;
+
+	usleep_range(20000, 30000);
+
+	hw_nt51021_bias_set(boe, 1);
+
+	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	ret = boe_panel_init_cmd(boe);
 	if (ret < 0) {
@@ -368,58 +393,6 @@ static int boe_panel_prepare(struct drm_panel *panel)
 	}
 	usleep_range(10000, 11000);
 
-	/*ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
-	if (ret < 0) {
-		dev_err(panel->dev, "Failed to set tear on: %d\n", ret);
-		return ret;
-	}
-
-	ret = mipi_dsi_dcs_set_display_on(dsi);
-	if (ret) {
-		dev_err(panel->dev, "failed to turn display on (%d)\n", ret);
-		return ret;
-	}
-	usleep_range(80000, 90000);*/
-
-	boe->prepared = true;
-
-	return 0;
-
-poweroff:
-	regulator_disable(boe->vsn);
-poweroffvsp:
-	regulator_disable(boe->vsp);
-	gpiod_set_value_cansleep(boe->blpwr_gpio, 0);
-	gpiod_set_value_cansleep(boe->power_gpio, 0);
-	usleep_range(2000, 4000);
-poweroff1v8:
-//	usleep_range(5000, 7000);
-	regulator_disable(boe->vdd);
-	gpiod_set_value(boe->reset_gpio, 1);
-
-	return ret;
-}
-
-static int boe_panel_enable(struct drm_panel *panel)
-{
-	struct boe_panel *boe = to_boe_panel(panel);
-	struct mipi_dsi_device *dsi = boe->dsi;
-	int ret;
-
-	if (boe->enabled)
-		return 0;
-
-	usleep_range(20000, 30000);
-
-	hw_nt51021_bias_set(boe, 1);
-
-	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
-	if (ret < 0) {
-		dev_err(panel->dev, "Failed to exit sleep mode: %d\n", ret);
-		return ret;
-    }
-
-	boe->enabled = true;
 	return 0;
 }
 
@@ -450,15 +423,15 @@ static const struct panel_desc boe_nt51021_10_desc = {
 };
 
 static const struct drm_display_mode cmi_nt51021_10_default_mode = {
-	.clock = (1200 + 60 + 24+ 80) * (1920 + 14 + 2 + 10) * 60 / 1000,
+	.clock = (1200 + 64 + 4 + 36) * (1920 + 104 + 2 + 24) * 60 / 1000,
 	.hdisplay = 1200,
-	.hsync_start = 1200 + 60,
-	.hsync_end = 1200 + 60 + 24,
-	.htotal = 1200 + 60 + 24+ 80,
+	.hsync_start = 1200 + 64,
+	.hsync_end = 1200 + 64 + 4,
+	.htotal = 1200 + 64 + 4 + 36,
 	.vdisplay = 1920,
-	.vsync_start = 1920 + 14,
-	.vsync_end = 1920 + 14 + 2,
-	.vtotal = 1920 + 14 + 2 + 10,
+	.vsync_start = 1920 + 104,
+	.vsync_end = 1920 + 104 + 2,
+	.vtotal = 1920 + 104 + 2 + 24,
 };
 
 static const struct panel_desc cmi_nt51021_10_desc = {
