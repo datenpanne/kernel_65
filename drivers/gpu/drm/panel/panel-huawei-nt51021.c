@@ -306,7 +306,7 @@ static int boe_panel_prepare(struct drm_panel *panel)
 {
 	struct boe_panel *boe = to_boe_panel(panel);
 	//struct mipi_dsi_device *dsi = boe->dsi;
-	//int ret;
+	int ret;
 
 	ret = regulator_enable(boe->vdd);
 	if (ret < 0)
@@ -347,8 +347,8 @@ static int boe_panel_prepare(struct drm_panel *panel)
 
 	return 0;
 
-poweroff:
-	regulator_disable(boe->vsn);
+//poweroff:
+//	regulator_disable(boe->vsn);
 poweroffvsp:
 	regulator_disable(boe->vsp);
 	gpiod_set_value(boe->blpwr_gpio, 0);
@@ -377,7 +377,8 @@ static int boe_panel_enable(struct drm_panel *panel)
 	ret = boe_panel_init_cmd(boe);
 	if (ret < 0) {
 		dev_err(panel->dev, "failed to init panel: %d\n", ret);
-		goto poweroff;
+		//goto poweroff;
+		return ret;
 	}
 
 	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
