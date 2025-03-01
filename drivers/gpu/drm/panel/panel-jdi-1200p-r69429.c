@@ -472,7 +472,7 @@ static void jdi_r69429_1200p_remove(struct mipi_dsi_device *dsi)
 }
 
 static const struct of_device_id jdi_r69429_1200p_of_match[] = {
-	{ .compatible = "jdi,1200p-r69429" },
+	{ .compatible = "pele,jdi-r69429" },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, jdi_r69429_1200p_of_match);
@@ -481,7 +481,7 @@ static struct mipi_dsi_driver jdi_r69429_1200p_driver = {
 	.probe = jdi_r69429_1200p_probe,
 	.remove = jdi_r69429_1200p_remove,
 	.driver = {
-		.name = "panel-jdi-1200p-r69429",
+		.name = "panel-pele-jdi--r69429",
 		.of_match_table = jdi_r69429_1200p_of_match,
 	},
 };
