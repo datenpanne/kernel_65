@@ -13,7 +13,7 @@
 #include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
 
 / {
-	model = "Huawei MediaPad T2 Pro 10";
+	model = "Huawei MediaPad T2 10.0 Pro";
 	compatible = "huawei,federer", "qcom,msm8939";
 	chassis-type = "tablet";
 
@@ -31,12 +31,12 @@
 	reserved-memory {
 		cont_splash_mem: framebuffer@83000000 {
 			compatible = "removed-dma-pool";
-			reg = <0x0 0x83000000 0x0 0x1400000>;
+			reg = <0x0 0x83000000 0x0 0x2000000>;
 			no-map;
 		};
 
-		reserved@84400000 {
-			reg = <0x0 0x84400000 0x0 0x1C00000>;
+		reserved@85000000 {
+			reg = <0x0 0x85000000 0x0 0x1000000>;
 			no-map;
 		};
 
@@ -163,110 +163,55 @@
 		};
 	};
 
+	speaker_amp: audio-amplifier {
+		compatible = "simple-audio-amplifier";
+		//VCC-supply = <&speaker_swich_reg>;
+
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&speaker_amp_default>;
+		pinctrl-1 = <&speaker_amp_sleep>;
+
+		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>,<&tlmm 0 GPIO_ACTIVE_HIGH>, <&tlmm 1 GPIO_ACTIVE_HIGH>, <&tlmm 2 GPIO_ACTIVE_HIGH>; //enable gpio
+		//startup-delay-us = <100000>; //delay 100ms
+
+		//gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>, <&tlmm 1 GPIO_ACTIVE_HIGH>, <&tlmm 2 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Speaker Switch";
+	};
+
 	reg_tp_vdd: regulator-tp-vdd {
 		compatible = "regulator-fixed";
 		regulator-name = "tp_vdd";
 
-		gpio = <&tlmm 112 GPIO_ACTIVE_HIGH>;
+		gpios = <&tlmm 112 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
+
 		pinctrl-names = "default";
 		pinctrl-0 = <&tp_vdd_default>;
 	};
 
 	reg_lcd_vsp: regulator-lcd-vsp {
 		compatible = "regulator-fixed";
-		regulator-name = "lcd_vsp";
+		regulator-name = "vsp";
 		regulator-min-microvolt = <5400000>;
 		regulator-max-microvolt = <5400000>;
 		regulator-always-on;
 		regulator-boot-on; // allows fb console to show up briefly at boot without always-on
 		enable-active-high;
-
-		/*gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_vsp_default>;*/
 	};
 
 	reg_lcd_vsn: regulator-lcd-vsn {
 		compatible = "regulator-fixed";
-		regulator-name = "lcd_vsn";
+		regulator-name = "vsn";
 		regulator-min-microvolt = <5400000>;
 		regulator-max-microvolt = <5400000>;
 		regulator-always-on;
 		regulator-boot-on; // allows fb console to show up briefly at boot without always-on
 		enable-active-high;
-
-		/*gpio = <&tlmm 32 GPIO_ACTIVE_HIGH>;
-		startup-delay-us = <200000>; //delay 200
-		enable-active-high;
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_vsn_default>;*/
 	};
-
-	reg_sp_boost: regulator-sp-boost {
-		compatible = "regulator-fixed";
-		regulator-name = "sp_boost";
-
-		gpio = <&tlmm 2 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		pinctrl-names = "default";
-		pinctrl-0 = <&sp_boost_default>;
-	};
-
-	/*reg_sp_swich: regulator-sp-swich {
-		compatible = "regulator-fixed";
-		regulator-name = "sp_swich";
-		vin-supply = <&reg_sp_boost>;
-
-		gpio = <&tlmm 1 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&sp_swich_default>;
-	};*/
-
-	headphones_switch: audio-switch {
-		compatible = "simple-audio-amplifier";
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&headphones_switch_default>;
-
-		enable-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
-		sound-name-prefix = "Headphones Switch";
-	};
-
-	speaker_amp: audio-amplifier {
-		compatible = "simple-audio-amplifier";
-		VCC-supply = <&reg_sp_boost>;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&speaker_amp_default>;
-
-		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>; //enable
-		startup-delay-us = <100000>; //delay 100ms
-		sound-name-prefix = "Speaker Amp";
-	};
-
-	/* this is a power switch that connects otg power from bq24296 to the usb socket
-	otg_path: otg-path {
-		compatible = "regulator-fixed";
-		regulator-name = "otg_path";
-		vin-supply = <&usb_otg_vbus>;	// request otg booster of bq24296
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-
-		gpio =  <&tlmm 108 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		pinctrl-names = "default";
-		pinctrl-0 = <&otg_path_default>;
-	}; */
 
 	usb_id: usb-id {
 		compatible = "linux,extcon-usb-gpio";
-		id-gpio = <&tlmm 117 GPIO_ACTIVE_HIGH>;
+		id-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&usb_id_default>;
 		pinctrl-names = "default";
 	};
@@ -291,11 +236,43 @@
 	light@38 {
 		compatible = "rohm,bh1745";
 		reg = <0x38>;
+
+		interrupt-parent = <&tlmm >;
+		interrupts = <113 IRQ_TYPE_LEVEL_LOW>;
 		vdd-supply = <&pm8916_l17>;
-		vio-supply = <&pm8916_l6>;
+		//vio-supply = <&pm8916_l6>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&light_irq_default>;
+	};
+
+	flash-led-controller@63 {
+		compatible = "leds-lm3642";
+		reg = <0x63>;
+
+		pinctrl-0 = <&camera_rear_flash_default>;
+		pinctrl-1 = <&camera_rear_flash_sleep>;
+		pinctrl-names = "default","sleep";
+
+		//gpios = <&tlmm 86 GPIO_ACTIVE_HIGH>,<&tlmm 31 GPIO_ACTIVE_HIGH >;
+
+		flash_led {
+			linux,default-trigger = "flash";
+			function = LED_FUNCTION_FLASH;
+			color = <LED_COLOR_ID_WHITE>;
+			gpios = <&tlmm 86 GPIO_ACTIVE_HIGH>;
+			led-sources = <0>, <1>;
+		};
+		torch_led {
+			linux,default-trigger = "torch";
+			function = LED_FUNCTION_TORCH;
+			color = <LED_COLOR_ID_WHITE>;
+			gpios = <&tlmm 31 GPIO_ACTIVE_HIGH >;
+			led-sources = <0>, <0>;
+		};
 	};
 };
-/*
+
 &blsp_i2c4 {
 	status = "okay";
 
@@ -303,14 +280,17 @@
 		compatible = "ti,bq24296";
 		reg = <0x6b>;
 		interrupt-parent = <&tlmm>;
-		interrupts = <62 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <62 IRQ_TYPE_EDGE_FALLING>;
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&bq24192_charger_default>;
 		pinctrl-1 = <&bq24192_charger_sleep>;
+		monitored-battery = <&battery>;
+		//ti,system-minimum-microvolt = <3350000>;
 		omit-battery-class;
-		usb_otg_vbus: usb-otg-vbus { };
+		usb_otg_vbus: usb-otg-vbus {
+		};
 	};
-};*/
+};
 
 &blsp_i2c5 {
 	status = "okay";
@@ -347,7 +327,7 @@
 
 &mdss_dsi0 {
 	pinctrl-0 = <&mdss_default &mdss_te_default>;
-	pinctrl-1 = <&mdss_sleep&mdss_te_sleep>;
+	pinctrl-1 = <&mdss_sleep &mdss_te_sleep>;
 	pinctrl-names = "default", "sleep";
 	status = "okay";
 
@@ -355,12 +335,13 @@
 		compatible = "huawei,federer-panel";
 		reg = <0>;
 
-		vdd-supply = <&pm8916_l6>;
+		vddio-supply = <&pm8916_l6>;
 		vsp-supply = <&reg_lcd_vsp>;
 		vsn-supply = <&reg_lcd_vsn>;
 		power-gpios = <&tlmm 32 GPIO_ACTIVE_HIGH>;
+		blpower-gpios = <&tlmm 109 GPIO_ACTIVE_HIGH>;
+
 		backlight-gpios = <&tlmm 97 GPIO_ACTIVE_HIGH>;
-		blpwr-gpios = <&tlmm  109 GPIO_ACTIVE_HIGH>;
 
 		reset-gpios = <&tlmm 25 GPIO_ACTIVE_LOW>;
 		te-gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
@@ -391,7 +372,7 @@
 	status = "okay";
 
 	monitored-battery = <&battery>;
-	//power-supplies = <&charger>;
+	power-supplies = <&charger>;
 };
 
 &pm8916_codec {
@@ -436,14 +417,18 @@
 		regulator-always-on; 
 		regulator-boot-on;
 	};
+
 	pm8916_l8: l8 {
 		regulator-min-microvolt = <2950000>;
 		regulator-max-microvolt = <2950000>;
 	};
+
 	pm8916_l16: l16 {
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
+		regulator-boot-on;
 	};
+
 	pm8916_l17: l17 {
 		regulator-min-microvolt = <2850000>;
 		regulator-max-microvolt = <2850000>;
@@ -471,25 +456,20 @@
 		label = "vbat_sns";
 	};
 
+	/* cam therm */
 	channel@11 {
 		reg = <VADC_P_MUX2_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		label = "pa_therm1";
+		label = "mpp2_div1";
 	};
 
+	/* cpu therm */
 	channel@13 {
 		reg = <VADC_P_MUX4_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		label = "case_therm";
-	};
-
-	channel@b {
-		reg = <VADC_CHG_TEMP>;
-		qcom,pre-scaling = <1 1>;
-		qcom,hw-settle-time = <0>;
-		label = "chg_temp";
+		label = "mpp4_div1";
 	};
 
 	channel@30 {
@@ -497,6 +477,7 @@
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
+		qcom,avg-samples = <1>;
 		label = "batt_therm";
 	};
 
@@ -504,7 +485,7 @@
 		reg = <VADC_LR_MUX2_BAT_ID>;
 		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
-		qcom,hw-settle-time = <2>;
+		qcom,hw-settle-time = <200>;
 		label = "batt_id";
 	};
 
@@ -516,6 +497,7 @@
 		label = "xo_therm";
 	};
 
+	/* pa therm0 */
 	channel@36 {
 		reg = <VADC_LR_MUX7_HW_ID>;
 		qcom,pre-scaling = <1 1>;
@@ -530,6 +512,14 @@
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
 		label = "xo_therm_buf";
+	};
+
+	channel@b {
+		reg = <VADC_CHG_TEMP>;
+		//reg = <0xb>;
+		qcom,pre-scaling = <1 1>;
+		qcom,hw-settle-time = <0>;
+		label = "chg_temp";
 	};
 };
 
@@ -553,6 +543,40 @@
 
 &sound {
 	status = "okay";
+	pinctrl-names = "default", "sleep";
+
+	pinctrl-0 = <&cdc_pdm_default>;
+	pinctrl-1 = <&cdc_pdm_sleep>;
+
+	model = "wt86528";
+	widgets =
+		"Speaker", "Speaker",
+		"Headphone", "Headphones";
+	pin-switches = "Speaker";
+	//pin-switches = "Speaker", "Headphones";
+	audio-routing =
+		"Speaker", "Speaker Switch OUTL",
+		"Speaker", "Speaker Switch OUTR",
+		"Speaker Switch INL", "HPH_L",
+		"Speaker Switch INR", "HPH_R",
+		/*"Headphones", "Headphones Switch OUTL",
+		"Headphones", "Headphones Switch OUTR",
+		"Headphones Switch INL", "HPH_L",
+		"Headphones Switch INR", "HPH_R",*/
+		"Headphones", "HPH_L",
+		"Headphones", "HPH_R",
+		"AMIC1", "MIC BIAS External1",
+		"AMIC2", "MIC BIAS External2",
+		"AMIC3", "MIC BIAS External1";
+	aux-devs = <&speaker_amp>;//, <&headphones_switch>;
+};
+/*
+&sound {
+	status = "okay";
+	pinctrl-names = "default", "sleep";
+
+	pinctrl-0 = <&cdc_pdm_default>;
+	pinctrl-1 = <&cdc_pdm_sleep>;
 
 	model = "wt86528";
 	widgets =
@@ -572,18 +596,19 @@
 		"AMIC2", "MIC BIAS External2",
 		"AMIC3", "MIC BIAS External1";
 	aux-devs = <&speaker_amp>, <&headphones_switch>;
-};
+};*/
 
 &usb {
-	extcon = <&usb_id>, <&usb_id>;
-	//extcon = <&charger>, <&usb_id>;
-	//vbus-supply = <&usb_otg_vbus>;
+	//extcon = <&usb_id>, <&usb_id>;
+	extcon = <&charger>, <&usb_id>;
+	vbus-supply = <&usb_otg_vbus>;
+
 	status = "okay";
 };
 
 &usb_hs_phy {
-	extcon = <&usb_id>;
-	//extcon = <&charger>;
+	//extcon = <&usb_id>;
+	extcon = <&charger>;
 };
 
 &wcnss {
@@ -620,6 +645,20 @@
 		bias-pull-up;
 	};
 
+	camera_rear_flash_default: camera-rear-flash-default-state {
+		pins = "gpio31", "gpio86";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	camera_rear_flash_sleep: camera-rear-flash-sleep-state {
+		pins = "gpio31", "gpio86";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
 	gpio_hall_sensor_default: gpio-hall-sensor-default-state {
 		pins = "gpio69";
 		function = "gpio";
@@ -641,17 +680,10 @@
 		bias-disable;
 	};
 
-	headphones_switch_default: headphones-switch-default-state {
-		pins = "gpio0";
+	light_irq_default: accel-irq-default-state {
+		pins = "gpio113";
 		function = "gpio";
 
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	mag_reset_default: mag-reset-default-state {
-		pins = "gpio36";
-		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
 	};
@@ -686,13 +718,6 @@
 		bias-pull-down;
 	};
 
-	otg_path_default: otg-path-default-state {
-		pins = "gpio108";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
 	sdc2_cd_default: sdc2-cd-default-state {
 		pins = "gpio38";
 		function = "gpio";
@@ -700,25 +725,18 @@
 		bias-disable;
 	};
 
-	sp_boost_default: sp-boost-default-state {
-		pins = "gpio2";
-		function = "gpio";
-
-		drive-strength = <2>;
-		bias-disable;
-	};
-
 	speaker_amp_default: speaker-amp-default-state {
-		pins = "gpio3";
+		pins = "gpio3", "gpio1", "gpio2", "gpio0";
 		function = "gpio";
 
-		drive-strength = <2>;
+		drive-strength = <8>;
 		bias-disable;
 	};
 
-	sp_swich_default: sp-swich-default-state {
-		pins = "gpio1";
+	speaker_amp_sleep: speaker-amp-sleep-state {
+		pins = "gpio3", "gpio1", "gpio2";
 		function = "gpio";
+
 		drive-strength = <2>;
 		bias-disable;
 	};
@@ -755,22 +773,22 @@
 #define POWER_SUPPLY_TECHNOLOGY_NiCd 5
 #define POWER_SUPPLY_TECHNOLOGY_LiMn 6
 
-    fuel-gauge {
-	    compatible = "adc-battery";
-	    #address-cells = <1>;
-	    #size-cells = <0>;
+	fuel-gauge {
+		compatible = "adc-battery";
+		#address-cells = <1>;
+		#size-cells = <0>;
 
 		io-channels = <&pm8916_vadc 6>, <&pm8916_vadc 11>;//, <&pm8916_vadc 30>;
 		io-channel-names = "voltage", "current";//, "temperature";
 
-	    //charged-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
-	    monitored-battery = <&battery>;
-	  //  power-supplies = <&charger>;
-	    technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
-	    battery-name = "huawei-battery";
-	    charge_full_design = <6500000>;
-	    charge_empty_design = <00>;
-	    voltage_min_design = <3350000>;
-	    voltage_max_design = <4350000>;
-    };
+		//charged-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
+		monitored-battery = <&battery>;
+		power-supplies = <&charger>;
+		technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
+		battery-name = "huawei-battery";
+		charge_full_design = <6500000>;
+		charge_empty_design = <00>;
+		voltage_min_design = <3350000>;
+		voltage_max_design = <4350000>;
+	};
 };
