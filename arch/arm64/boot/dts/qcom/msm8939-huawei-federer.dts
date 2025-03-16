@@ -165,23 +165,53 @@
 
 	speaker_amp: audio-amplifier {
 		compatible = "simple-audio-amplifier";
-		//VCC-supply = <&speaker_swich_reg>;
+		VCC-supply = <&speaker_vdd>;
 
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&speaker_amp_default>;
 		pinctrl-1 = <&speaker_amp_sleep>;
 
-		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>,<&tlmm 0 GPIO_ACTIVE_HIGH>, <&tlmm 1 GPIO_ACTIVE_HIGH>, <&tlmm 2 GPIO_ACTIVE_HIGH>; //enable gpio
+		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
 		//startup-delay-us = <100000>; //delay 100ms
 
 		//gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>, <&tlmm 1 GPIO_ACTIVE_HIGH>, <&tlmm 2 GPIO_ACTIVE_HIGH>;
 		sound-name-prefix = "Speaker Switch";
 	};
 
+	speaker_boost: regulator-speaker-boost@2 {
+		compatible = "regulator-fixed";
+		regulator-name = "speaker-boost";
+		//vin-supply = <&speaker_switch>;
+
+		gpios= <&tlmm 2 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		//regulator-always-on;
+	};
+
+	speaker_switch: regulator-speaker-switch@1 {
+		compatible = "regulator-fixed";
+		regulator-name = "speaker-switch";
+		vin-supply = <&speaker_boost>;
+
+		gpios = <&tlmm 1 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		//regulator-always-on;
+	};
+
+	speaker_vdd: regulator-speaker-vdd@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "speaker-vdd";
+
+		vin-supply = <&speaker_switch>;
+		gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
 	reg_tp_vdd: regulator-tp-vdd@112 {
 		compatible = "regulator-fixed";
 		regulator-name = "tp-vdd";
-		gpio = <&tlmm 112 GPIO_ACTIVE_HIGH>;
+		gpios = <&tlmm 112 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		regulator-always-on;
 	};
@@ -723,15 +753,15 @@
 	};
 
 	speaker_amp_default: speaker-amp-default-state {
-		pins = "gpio3", "gpio1", "gpio2", "gpio0";
+		pins = "gpio3";
 		function = "gpio";
 
-		drive-strength = <8>;
+		drive-strength = <2>;
 		bias-disable;
 	};
 
 	speaker_amp_sleep: speaker-amp-sleep-state {
-		pins = "gpio3", "gpio1", "gpio2";
+		pins = "gpio3";
 		function = "gpio";
 
 		drive-strength = <2>;

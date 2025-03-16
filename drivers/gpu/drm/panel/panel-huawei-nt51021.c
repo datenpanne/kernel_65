@@ -323,7 +323,7 @@ huawei_nt51021_create_backlight(struct mipi_dsi_device *dsi)
 	//struct huawei_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	struct device *dev = &dsi->dev;
 	const struct backlight_properties props = {
-		.power = FB_BLANK_UNBLANK,
+		//.power = FB_BLANK_UNBLANK,
 		.type = BACKLIGHT_RAW,
 		.brightness = 128,	
 		//.brightness = huawei_nt51021_get_actual_brightness(ctx),
@@ -376,8 +376,10 @@ static int huawei_nt51021_probe(struct mipi_dsi_device *dsi)
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags =  MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_MODE_VIDEO_HSE | MIPI_DSI_MODE_NO_EOT_PACKET;
+	dsi->mode_flags =  MIPI_DSI_MODE_VIDEO
+			| MIPI_DSI_MODE_VIDEO_HSE
+			| MIPI_DSI_CLOCK_NON_CONTINUOUS
+			| MIPI_DSI_MODE_VIDEO_BURST;
 
 	drm_panel_init(&ctx->panel, dev, &huawei_nt51021_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
