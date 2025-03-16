@@ -164,9 +164,15 @@ static int huawei_nt51021_prepare(struct drm_panel *panel)
 
 	huawei_nt51021_gpio_power(ctx,1);
 
+	ret = mipi_dsi_dcs_nop(ctx->dsi);
+		if (ret < 0) {
+		dev_err(&ctx->dsi->dev, "Failed to send NOP: %d\n", ret);
+		}
+	usleep_range(1000, 2000);
+
 	huawei_nt51021_reset(ctx);
 
-	huawei_nt51021_gpio_vled(ctx,1);
+	//huawei_nt51021_gpio_vled(ctx,1);
 
 	ret = huawei_nt51021_on(ctx);
 	if (ret < 0) {
@@ -187,8 +193,8 @@ static int huawei_nt51021_unprepare(struct drm_panel *panel)
 	/* Ignore errors on failure, in any case set gpio and disable regulators */
 	huawei_nt51021_off(ctx);
 
-	huawei_nt51021_gpio_vled(ctx,0);
-	msleep(200);
+	//huawei_nt51021_gpio_vled(ctx,0);
+	//msleep(200);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 	huawei_nt51021_gpio_power(ctx,0);
@@ -269,8 +275,14 @@ static int huawei_nt51021_get_brightness(struct mipi_dsi_device *dsi,
 static int huawei_nt51021_bl_update_status(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
+	struct huawei_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	u16 brightness = backlight_get_brightness(bl);
 	int ret;
+
+	if (!!brightness) {
+	huawei_nt51021_gpio_vled(ctx,1);
+	msleep(120);
+	};
 
 	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
@@ -311,9 +323,9 @@ huawei_nt51021_create_backlight(struct mipi_dsi_device *dsi)
 	//struct huawei_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	struct device *dev = &dsi->dev;
 	const struct backlight_properties props = {
-		//.power = FB_BLANK_UNBLANK,
+		.power = FB_BLANK_UNBLANK,
 		.type = BACKLIGHT_RAW,
-		.brightness = 255,	
+		.brightness = 128,	
 		//.brightness = huawei_nt51021_get_actual_brightness(ctx),
 		.max_brightness = 255,
 	};
@@ -339,7 +351,7 @@ static int huawei_nt51021_probe(struct mipi_dsi_device *dsi)
 	if (ret < 0)
 		return ret;
 
-	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
@@ -364,9 +376,8 @@ static int huawei_nt51021_probe(struct mipi_dsi_device *dsi)
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_MODE_VIDEO_HSE | MIPI_DSI_MODE_NO_EOT_PACKET |
-			  MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	dsi->mode_flags =  MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_SYNC_PULSE |
+		      MIPI_DSI_MODE_LPM;
 
 	drm_panel_init(&ctx->panel, dev, &huawei_nt51021_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
