@@ -178,15 +178,12 @@
 		sound-name-prefix = "Speaker Switch";
 	};
 
-	reg_tp_vdd: regulator-tp-vdd {
+	reg_tp_vdd: regulator-tp-vdd@112 {
 		compatible = "regulator-fixed";
-		regulator-name = "tp_vdd";
-
-		gpios = <&tlmm 112 GPIO_ACTIVE_HIGH>;
+		regulator-name = "tp-vdd";
+		gpio = <&tlmm 112 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&tp_vdd_default>;
+		regulator-always-on;
 	};
 
 	reg_lcd_vsp: regulator-lcd-vsp {
@@ -365,7 +362,7 @@
 };
 
 &mpss_mem {
-	size = <0x0 0x5600000>;
+	size = <0x0 0x5500000>;
 };
 
 &pm8916_bms {
@@ -739,13 +736,6 @@
 
 		drive-strength = <2>;
 		bias-disable;
-	};
-
-	tp_vdd_default: reg-tp-vdd-default-state {
-		pins = "gpio112";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-up;
 	};
 
 	touchscreen_default: touchscreen-default-state {

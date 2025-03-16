@@ -216,35 +216,20 @@
 		pinctrl-0 = <&lcd_3v3_default>;
 	};*/
 
-	reg_tp_vdd: regulator-tp-vdd {
+	reg_tp_vdd: regulator-tp-vdd@112 {
 		compatible = "regulator-fixed";
-		regulator-name = "tp_vdd";
-		regulator-min-microvolt = <2850000>;
-		regulator-max-microvolt = <2850000>;
-		regulator-always-on;
-		regulator-boot-on; 
-
+		regulator-name = "tp-vdd";
 		gpio = <&tlmm 112 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&tp_vdd_default>;
+		regulator-always-on;
 	};
 
-	reg_tp_vddio: regulator-tp-vddio {
+	reg_tp_vddio: regulator-tp-vddio@10 {
 		compatible = "regulator-fixed";
-		regulator-name = "tp_vddio";
-		vin-supply = <&pm8916_l16>;
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		regulator-always-on;
-		regulator-boot-on; 
-
+		regulator-name = "tp-vddio";
 		gpio = <&tlmm 10 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&tp_vddio_default>;
+		regulator-always-on;
 	};
 
 	usb_id: usb-id {
@@ -342,7 +327,7 @@
 
 	panel@0 {
 		reg = <0>;
-		compatible = "jdi,1200p-r69429";
+		compatible = "huawei,pele-panel";
 
 		reset-gpios = <&tlmm 25 GPIO_ACTIVE_LOW>;
 		disp-te-gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
@@ -407,20 +392,6 @@
 			qcom,amux-route = <3>; //PMIC_MPP_AMUX_ROUTE_CH8
 		};
 	};
-
-	/*mpp@a100 { //reference
-		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
-		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
-		qcom,ain-route = <1>; // QPNP_PIN_AIN_AMUX_CH6
-		qcom,master-en = <1>; // Enable features
-	};
-
-	mpp@a300 {
-		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
-		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
-		qcom,ain-route = <3>; // QPNP_PIN_AIN_AMUX_CH8
-		qcom,master-en = <1>; // Enable features
-	};*/
 };
 
 &pm8916_resin {
@@ -452,31 +423,29 @@
 };
 
 &pm8916_vadc {
-	adc-chan@11 {
-		label = "VADC_P_MUX2_1_1";
-		reg = <0x11>;
-		qcom,decimation = <512>;
+	/* cam therm */
+	channel@11 {
+		reg = <VADC_P_MUX2_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
+		label = "mpp2_div1";
 	};
 
-	adc-chan@13 {
-		label = "VADC_P_MUX4_1_1";
-		reg = <0x13>;
-		qcom,decimation = <512>;
+	/* cpu therm */
+	channel@13 {
+		reg = <VADC_P_MUX4_1_1>;
 		qcom,pre-scaling = <1 1>;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
+		label = "mpp4_div1";
 	};
 
-	adc-chan@36 {
-		label = "VADC_LR_MUX7_HW_ID";
-		reg = <0x36>;
-		//qcom,decimation = <0>; wrong decimation?
+	/* pa therm0 */
+	channel@36 {
+		reg = <VADC_LR_MUX7_HW_ID>;
+		qcom,pre-scaling = <1 1>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
-		qcom,avg-samples = <1>;
+		label = "pa_therm0";
 	};
 };
 
@@ -666,20 +635,6 @@
 		pins = "gpio12", "gpio13";
 		function = "gpio";
 		drive-strength = <6>;
-		bias-pull-up;
-	};
-
-	tp_vdd_default: reg-tp-vdd-default-state {
-		pins = "gpio112";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-up;
-	};
-
-	tp_vddio_default: reg-tp-vddio-default-state {
-		pins = "gpio10";
-		function = "gpio";
-		drive-strength = <2>;
 		bias-pull-up;
 	};
 
