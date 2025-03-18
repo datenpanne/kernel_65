@@ -52,8 +52,9 @@ static void huawei_nt51021_reset(struct huawei_nt51021 *ctx)
 static void huawei_nt51021_gpio_power(struct huawei_nt51021 *ctx, int enable)
 {
 	gpiod_direction_output(ctx->vcc_pwr_gpio, enable);
+	msleep(500);
 	gpiod_direction_output(ctx->bl_pwr_gpio, enable);
-	msleep(50);
+	msleep(30);
 }
 
 static void huawei_nt51021_gpio_vled(struct huawei_nt51021 *ctx, int enable)
@@ -323,7 +324,7 @@ huawei_nt51021_create_backlight(struct mipi_dsi_device *dsi)
 	//struct huawei_nt51021 *ctx = mipi_dsi_get_drvdata(dsi);
 	struct device *dev = &dsi->dev;
 	const struct backlight_properties props = {
-		//.power = FB_BLANK_UNBLANK,
+		.power = FB_BLANK_UNBLANK,
 		.type = BACKLIGHT_RAW,
 		.brightness = 128,	
 		//.brightness = huawei_nt51021_get_actual_brightness(ctx),

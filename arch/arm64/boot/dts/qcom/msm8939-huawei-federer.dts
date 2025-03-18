@@ -172,7 +172,7 @@
 		pinctrl-1 = <&speaker_amp_sleep>;
 
 		enable-gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
-		//startup-delay-us = <100000>; //delay 100ms
+		startup-delay-us = <100000>; //delay 100ms
 
 		//gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>, <&tlmm 1 GPIO_ACTIVE_HIGH>, <&tlmm 2 GPIO_ACTIVE_HIGH>;
 		sound-name-prefix = "Speaker Switch";
