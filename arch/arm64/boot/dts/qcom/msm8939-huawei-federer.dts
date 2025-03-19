@@ -302,8 +302,7 @@
 
 &blsp_i2c4 {
 	status = "okay";
-
-	charger: bq24296@6b {
+	charger: bq24192@6b {
 		compatible = "ti,bq24296";
 		reg = <0x6b>;
 		interrupt-parent = <&tlmm>;
@@ -392,7 +391,7 @@
 };
 
 &mpss_mem {
-	size = <0x0 0x5500000>;
+	size = <0x0 0x5600000>;
 };
 
 &pm8916_bms {
@@ -636,6 +635,11 @@
 &usb_hs_phy {
 	//extcon = <&usb_id>;
 	extcon = <&charger>;
+
+	qcom,init-seq = /bits/ 8 <0x0 0x74>,
+				<0x1 0x65>,
+				<0x2 0x31>,
+				<0x3 0x33>;
 };
 
 &wcnss {
@@ -707,7 +711,7 @@
 		bias-disable;
 	};
 
-	light_irq_default: accel-irq-default-state {
+	light_irq_default: light-irq-default-state {
 		pins = "gpio113";
 		function = "gpio";
 
@@ -804,11 +808,11 @@
 		//charged-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
 		monitored-battery = <&battery>;
 		power-supplies = <&charger>;
-		technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
+		/* technology = <POWER_SUPPLY_TECHNOLOGY_LIPO>;
 		battery-name = "huawei-battery";
 		charge_full_design = <6500000>;
 		charge_empty_design = <00>;
 		voltage_min_design = <3350000>;
-		voltage_max_design = <4350000>;
+		voltage_max_design = <4350000>;*/
 	};
 };
