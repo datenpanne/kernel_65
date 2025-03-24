@@ -16,12 +16,6 @@
 	model = "Huawei MediaPad T2 Pro 7";
 	compatible = "huawei,pele", "qcom,msm8939";
 	chassis-type = "tablet";
-	//qcom,msm-id = <239 0x30000 >;
-	 /* qcom,board-id =	<8113 0> , <8113 4>;//701l
-                  <8002 0> , <8002 4>, //701w
-                    <8129 0> , <8129 4>, //702l
-                    <8066 0> , <8066 4>, //703lt
-                    <8096 0> , <8096 4>; //703l*/
 
 	aliases {
 		mmc0 = &sdhc_1; /* eMMC */
@@ -36,16 +30,11 @@
 	reserved-memory {
 		cont_splash_mem: framebuffer@83000000 {
 			compatible = "removed-dma-pool";
-			reg = <0x0 0x83000000 0x0 0x2000000>;
+			reg = <0x0 0x83000000 0x0 0x1A00000>;
 			no-map;
 		};
 
-		reserved@85000000 {
-			reg = <0x0 0x85000000 0x0 0x1000000>;
-			no-map;
-		};
-
-		reserved@84a00000 {
+		qseecom_mem: qseecom@84a00000 {
 			reg = <0x0 0x84a00000 0x0 0x1600000>;
 			no-map;
 		};
@@ -160,12 +149,6 @@
 		regulator-max-microvolt = <1800000>;
 		regulator-always-on;
 		regulator-boot-on;
-
-		/*gpio = <&tlmm 10 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&tp_vddio_default>;*/
 	};
 
 	reg_lcd_vsp: regulator-lcd-vsp {
@@ -199,22 +182,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&lcd_vsn_default>;
 	};
-
-	/*lcd_pp3300: regulator-pp3300 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc_3v3";
-		vin-supply = <&pm8916_l16>;
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		regulator-always-on;
-		regulator-boot-on;
-
-		gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		//startup-delay-us = <200000>; //delay 200
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_3v3_default>;
-	};*/
 
 	reg_tp_vdd: regulator-tp-vdd@112 {
 		compatible = "regulator-fixed";
@@ -363,6 +330,7 @@
 	status = "okay";
 
 	monitored-battery = <&battery>;
+	power-supplies = <&charger>;
 };
 
 &pm8916_codec {
@@ -505,15 +473,15 @@
 };
 
 &usb {
-	extcon = <&usb_id>, <&usb_id>;
+	//extcon = <&usb_id>, <&usb_id>;
+	extcon = <&bq24296>, <&usb_id>;
+	vbus-supply = <&usb_otg_vbus>;
 	status = "okay";
-	//extcon = <&bq24296>, <&usb_id>;
-	//vbus-supply = <&usb_otg_vbus>;
 };
 
 &usb_hs_phy {
-	extcon = <&usb_id>;
-	//extcon = <&bq24296>;
+	//extcon = <&usb_id>;
+	extcon = <&bq24296>;
 };
 
 &wcnss {
@@ -644,11 +612,17 @@
 		drive-strength = <8>;
 		bias-pull-up;
 	};
+};
 
-    /*otg {
-        gpio-hog;
-        gpios = <108 GPIO_ACTIVE_HIGH>;
-        output-high;
-        line-name = "otg-gpio";
-    };*/
+/ {
+	fuel-gauge {
+	compatible = "adc-battery";
+
+		io-channels = <&pm8916_vadc 0x6>;//, <&pm8916_vadc 0x30>;//, <&pm8916_vadc 0x11>;
+		io-channel-names = "voltage";//, "temperature";//, "current";
+
+		//charged-gpios = <&tlmm 62>;
+		monitored-battery = <&battery>;
+		power-supplies = <&charger>;
+	};
 };
