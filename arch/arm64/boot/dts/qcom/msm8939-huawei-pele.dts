@@ -244,6 +244,24 @@
 	};*/
 };
 
+&blsp_i2c4 {
+	status = "okay";
+	charger: bq24192@6b {
+		compatible = "ti,bq24296";
+		reg = <0x6b>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <62 IRQ_TYPE_EDGE_FALLING>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&bq24192_charger_default>;
+		pinctrl-1 = <&bq24192_charger_sleep>;
+		monitored-battery = <&battery>;
+		//ti,system-minimum-microvolt = <3350000>;
+		omit-battery-class;
+		usb_otg_vbus: usb-otg-vbus { 
+		};
+	};
+};
+
 &blsp_i2c5 {
 	status = "okay";
 
@@ -502,6 +520,20 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
+	};
+
+	bq24192_charger_default: bq24196-charger-default-state  {
+		pins = "gpio62";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	bq24192_charger_sleep: bq24196-charger-sleep-state  {
+		pins = "gpio62";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
 	};
 
 	gpio_hall_sensor_default: gpio-hall-sensor-default-state {
