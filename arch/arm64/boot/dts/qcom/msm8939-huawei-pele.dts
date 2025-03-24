@@ -140,7 +140,6 @@
 		};
 	};
 
-
 	reg_lcd_vddio: regulator-lcd-vddio {
 		compatible = "regulator-fixed";
 		regulator-name = "vddio-incell";
@@ -492,14 +491,14 @@
 
 &usb {
 	//extcon = <&usb_id>, <&usb_id>;
-	extcon = <&bq24296>, <&usb_id>;
+	extcon = <&charger>, <&usb_id>;
 	vbus-supply = <&usb_otg_vbus>;
 	status = "okay";
 };
 
 &usb_hs_phy {
 	//extcon = <&usb_id>;
-	extcon = <&bq24296>;
+	extcon = <&charger>;
 };
 
 &wcnss {
